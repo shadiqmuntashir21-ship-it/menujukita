@@ -73,6 +73,7 @@ Required:
 - `DATABASE_URL`
 - `NEON_AUTH_BASE_URL`
 - `NEON_AUTH_COOKIE_SECRET`
+- `RSVP_SIGNING_SECRET` (separate from auth cookies; keep stable after public RSVP links are issued)
 - `ADMIN_EMAILS`
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
@@ -93,7 +94,8 @@ Neon Managed Better Auth owns the separate `neon_auth` schema.
 - viewer role is read-only
 - collaborator can edit operational planning
 - financial data requires separate budget permission
-- public RSVP links are HMAC-signed
+- public RSVP links are HMAC-signed with a dedicated `RSVP_SIGNING_SECRET`
+- public RSVP requires an active wedding and active license
 - targeted collaboration invites are tied to the invited email
 - documents use a private object bucket and short-lived signed URLs
 - uploads are capped at 5 MB/file and 15 MB/workspace
@@ -108,7 +110,8 @@ npm run dev
 ## CI
 GitHub Actions runs:
 ```bash
-npm install
+npm ci
+npx tsc --noEmit
 npm run build
 ```
 No production deployment is performed by CI.
