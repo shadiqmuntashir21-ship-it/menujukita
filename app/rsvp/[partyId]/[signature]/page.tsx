@@ -10,7 +10,10 @@ export default async function Page({params,searchParams}:{params:Promise<{partyI
   if(!verifyRsvpParty(partyId,signature))notFound();
   const db=sql();
   const rows=await db`SELECT gp.party_name,gp.max_pax,w.id wedding_id,w.couple_one_name,w.couple_two_name,w.wedding_date,w.city,g.id guest_id,g.rsvp_status,g.actual_pax,g.dietary_note
-    FROM guest_parties gp JOIN weddings w ON w.id=gp.wedding_id LEFT JOIN guests g ON g.party_id=gp.id
+    FROM guest_parties gp
+    JOIN weddings w ON w.id=gp.wedding_id AND w.status='active'
+    JOIN licenses l ON l.wedding_id=w.id AND l.status='active'
+    LEFT JOIN guests g ON g.party_id=gp.id AND g.wedding_id=w.id
     WHERE gp.id=${partyId} LIMIT 1`;
   if(!rows[0])notFound();
   const x:any=rows[0];
