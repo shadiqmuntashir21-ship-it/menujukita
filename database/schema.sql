@@ -1,0 +1,12 @@
+-- MenujuKita live schema is provisioned in Neon project steep-forest-69917879.
+-- Branch: br-bitter-waterfall-b5jea6qo
+-- Core tables:
+-- app_settings, weddings, licenses, wedding_members, wedding_events, tasks,
+-- budget_categories, budget_items, vendors, payments, guest_parties, guests,
+-- rsvps, seating_tables, seating_assignments, rundown_items, documents,
+-- notifications, activity_logs.
+-- Pilot hard guard:
+-- app_settings.max_active_weddings = 250
+-- trigger: enforce_active_license_limit()
+-- Authentication: Neon Managed Better Auth / neon_auth schema
+-- Private object bucket: menujuKita-private
