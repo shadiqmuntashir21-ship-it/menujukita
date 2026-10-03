@@ -1,11 +1,12 @@
 import crypto from "node:crypto";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { auth } from "@/lib/auth/server";
+import { auth,authConfigured } from "@/lib/auth/server";
 import { sql } from "@/lib/db";
 import { ALLOWED_FILE_TYPES,MAX_FILE_BYTES,MAX_WORKSPACE_BYTES,STORAGE_BUCKET,storageClient } from "@/lib/storage";
 
 export async function POST(req:Request){
+  if(!authConfigured)return Response.json({error:"server_not_configured"},{status:503});
   const {data:session}=await auth.getSession();
   if(!session?.user)return Response.json({error:"unauthorized"},{status:401});
 

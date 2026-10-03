@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
       NEON_AUTH_BASE_URL: https://example.com/auth
@@ -34,5 +34,8 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Typecheck
         run: npx tsc --noEmit
-      - name: Production build
+      - name: Vercel parity build without production secrets
+        run: |
+          env -u DATABASE_URL               -u NEON_AUTH_BASE_URL               -u NEON_AUTH_COOKIE_SECRET               -u RSVP_SIGNING_SECRET               -u ADMIN_EMAILS               -u AWS_ACCESS_KEY_ID               -u AWS_SECRET_ACCESS_KEY               -u AWS_ENDPOINT_URL_S3               -u AWS_REGION               -u NEON_STORAGE_BUCKET               npm run build
+      - name: Production build with configured environment
         run: npm run build

@@ -1,10 +1,11 @@
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { auth } from "@/lib/auth/server";
+import { auth,authConfigured } from "@/lib/auth/server";
 import { sql } from "@/lib/db";
 import { STORAGE_BUCKET,storageClient } from "@/lib/storage";
 
 export async function GET(_req:Request,{params}:{params:Promise<{id:string}>}){
+  if(!authConfigured)return Response.json({error:"server_not_configured"},{status:503});
   const {data:session}=await auth.getSession();
   if(!session?.user)return new Response("Unauthorized",{status:401});
   const {id}=await params;
@@ -21,15 +22,9 @@ export async function GET(_req:Request,{params}:{params:Promise<{id:string}>}){
       AND w.status='active'
     LIMIT 1`;
   if(!rows[0])return new Response("Not found",{status:404});
-
   const row:any=rows[0];
   const canBudget=["owner","partner"].includes(String(row.role))||Boolean(row.can_view_budget);
   if(["invoice","receipt"].includes(String(row.category))&&!canBudget)return new Response("Forbidden",{status:403});
-
-  const url=await getSignedUrl(
-    storageClient(),
-    new GetObjectCommand({Bucket:STORAGE_BUCKET,Key:String(row.object_key)}),
-    {expiresIn:120}
-  );
+  const url=await getSignedUrl(storageClient(),new GetObjectCommand({Bucket:STORAGE_BUCKET,Key:String(row.object_key)}),{expiresIn:120});
   return Response.redirect(url,302);
 }

@@ -2,13 +2,14 @@
 
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
-import { auth } from "@/lib/auth/server";
+import { auth,authConfigured } from "@/lib/auth/server";
 import { sql } from "@/lib/db";
 import { redirect } from "next/navigation";
 
 const hash=(v:string)=>crypto.createHash("sha256").update(v).digest("hex");
 
 export async function acceptInvite(token:string){
+  if(!authConfigured)redirect("/setup?reason=server-config");
   const {data:session}=await auth.getSession();
   if(!session?.user)redirect("/auth/sign-in?next="+encodeURIComponent("/join/"+token));
   const db=sql();
