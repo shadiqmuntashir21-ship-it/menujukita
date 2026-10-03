@@ -13,6 +13,7 @@ import ActivitySection from "@/components/live/activity-section";
 import WorkspaceSwitcher from "@/components/live/workspace-switcher";
 import NotificationsSection from "@/components/live/notifications-section";
 import SettingsSection from "@/components/live/settings-section";
+import MobileWorkspaceNav from "@/components/live/mobile-workspace-nav";
 
 export const dynamic="force-dynamic";
 
@@ -139,12 +140,6 @@ export default async function Page(){
       <ActivitySection items={activity as any[]}/>
       <SettingsSection wedding={wedding} email={String(session.user.email||"")}/>
     </main>
-    <nav className="mobile-nav live-mobile-nav">
-      <a href="#home"><Home size={18}/><small>Home</small></a>
-      <a href="#plan"><ListChecks size={18}/><small>Plan</small></a>
-      {canBudget?<a href="#money"><CircleDollarSign size={18}/><small>Money</small></a>:<a href="#documents"><FileText size={18}/><small>Docs</small></a>}
-      <a href="#guests"><UsersRound size={18}/><small>Guests</small></a>
-      <a href="#vendors"><Store size={18}/><small>Vendor</small></a>
-    </nav>
+    <MobileWorkspaceNav canBudget={canBudget}/>
   </div>;
 }
