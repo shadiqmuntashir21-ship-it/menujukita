@@ -3,7 +3,7 @@ import { Activity,CheckCircle2,CircleDollarSign,FileText,Store,UsersRound,UserRo
 const icons:any={task:CheckCircle2,payment:CircleDollarSign,budget:CircleDollarSign,vendor:Store,guest:UsersRound,document:FileText,member:UserRoundPlus,seating:Armchair};
 const labels:Record<string,string>={
   workspace_activated:"Workspace diaktifkan",
-  task_created:"Task ditambahkan",task_toggled:"Status task diubah",task_deleted:"Task dihapus",
+  task_created:"Task ditambahkan",task_assigned:"Task di-assign",task_toggled:"Status task diubah",task_deleted:"Task dihapus",
   vendor_created:"Vendor ditambahkan",vendor_status_changed:"Status vendor diubah",vendor_deleted:"Vendor dihapus",
   budget_item_created:"Budget item ditambahkan",budget_item_deleted:"Budget item dihapus",funds_updated:"Dana wedding diperbarui",
   payment_created:"Payment ditambahkan",payment_toggled:"Status payment diubah",payment_deleted:"Payment dihapus",
