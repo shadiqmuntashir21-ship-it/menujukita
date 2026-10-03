@@ -10,6 +10,7 @@ const num=(f:FormData,key:string)=>Math.max(0,Number(f.get(key)||0));
 
 export async function addTask(f:FormData){
   const{db,wedding,session}=await requireEditor();const title=text(f,"title");if(!title)return;
+  const [quota]=await db`SELECT count(*)::int count FROM tasks WHERE wedding_id=${wedding.id}`;if(Number(quota.count)>=500)throw new Error("Task limit reached");
   const rows=await db`INSERT INTO tasks(wedding_id,title,category,due_date,priority,status)
     VALUES(${wedding.id},${title},${text(f,"category")||"general"},${text(f,"due_date")||null},${text(f,"priority")||"medium"},'todo') RETURNING id`;
   await recordActivity(db,wedding.id,session.user.id,"task_created","task",String(rows[0]?.id||""),{title});
@@ -32,6 +33,7 @@ export async function deleteTask(f:FormData){
 
 export async function addVendor(f:FormData){
   const{db,wedding,session}=await requireEditor();const name=text(f,"name");if(!name)return;
+  const [quota]=await db`SELECT count(*)::int count FROM vendors WHERE wedding_id=${wedding.id}`;if(Number(quota.count)>=100)throw new Error("Vendor limit reached");
   const rows=await db`INSERT INTO vendors(wedding_id,category,name,pic_name,whatsapp,instagram,quoted_price,agreed_price,status,notes)
     VALUES(${wedding.id},${text(f,"category")||"Other"},${name},${text(f,"pic_name")||null},${text(f,"whatsapp")||null},${text(f,"instagram")||null},${num(f,"quoted_price")},${num(f,"agreed_price")},${text(f,"status")||"searching"},${text(f,"notes")||null}) RETURNING id,status`;
   await recordActivity(db,wedding.id,session.user.id,"vendor_created","vendor",String(rows[0]?.id||""),{name,status:rows[0]?.status});
@@ -97,6 +99,7 @@ export async function deletePayment(f:FormData){
 
 export async function addGuest(f:FormData){
   const{db,wedding,session}=await requireEditor();const name=text(f,"name");if(!name)return;
+  const [quota]=await db`SELECT count(*)::int count FROM guests WHERE wedding_id=${wedding.id}`;if(Number(quota.count)>=1500)throw new Error("Guest limit reached");
   const partyId=crypto.randomUUID(),guestId=crypto.randomUUID(),maxPax=Math.max(1,Math.min(20,num(f,"max_pax")||1));
   await db.transaction([
     db`INSERT INTO guest_parties(id,wedding_id,party_name,side,group_name,max_pax)
@@ -107,6 +110,31 @@ export async function addGuest(f:FormData){
   await recordActivity(db,wedding.id,session.user.id,"guest_created","guest",guestId,{name,maxPax});
   revalidatePath("/app");
 }
+export async function importGuests(rows:{name:string;phone?:string;group?:string;pax?:number}[]){
+  const{db,wedding,session}=await requireEditor();
+  const clean=rows.slice(0,500).map(r=>({
+    name:String(r.name||"").trim().slice(0,160),
+    phone:String(r.phone||"").trim().slice(0,40),
+    group:String(r.group||"Other").trim().slice(0,80)||"Other",
+    pax:Math.max(1,Math.min(20,Number(r.pax||1)))
+  })).filter(r=>r.name);
+  if(!clean.length)return{imported:0};
+  const [quota]=await db`SELECT count(*)::int count FROM guests WHERE wedding_id=${wedding.id}`;
+  if(Number(quota.count)+clean.length>1500)throw new Error("Guest limit reached");
+  const statements:any[]=[];
+  for(const r of clean){
+    const partyId=crypto.randomUUID(),guestId=crypto.randomUUID();
+    statements.push(db`INSERT INTO guest_parties(id,wedding_id,party_name,side,group_name,max_pax)
+      VALUES(${partyId},${wedding.id},${r.name},'other',${r.group},${r.pax})`);
+    statements.push(db`INSERT INTO guests(id,wedding_id,party_id,name,phone,invitation_quantity,expected_pax,rsvp_status)
+      VALUES(${guestId},${wedding.id},${partyId},${r.name},${r.phone||null},${r.pax},${r.pax},'waiting')`);
+  }
+  await db.transaction(statements);
+  await recordActivity(db,wedding.id,session.user.id,"guest_csv_imported","guest",null,{count:clean.length});
+  revalidatePath("/app");
+  return{imported:clean.length};
+}
+
 export async function setGuestRsvp(f:FormData){
   const{db,wedding,session}=await requireEditor();const status=text(f,"status"),id=text(f,"id");
   if(!["waiting","attending","not_attending","maybe"].includes(status))return;
