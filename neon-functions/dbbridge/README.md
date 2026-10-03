@@ -1,0 +1,1 @@
+# MenujuKita DB Bridge\n\nServer-side Neon Function used by Vercel production. Requests must carry a valid Vercel OIDC token for `shadiq/menujukita-da4n` in the production environment.\n\nThe vendored `postgres` driver is version 3.4.7 (Unlicense).\n
