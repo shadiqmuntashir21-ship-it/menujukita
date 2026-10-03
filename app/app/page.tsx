@@ -32,7 +32,7 @@ export default async function Page(){
     canBudget?db`SELECT p.*,CASE WHEN p.status='upcoming' AND p.due_date<CURRENT_DATE THEN 'overdue' ELSE p.status END AS display_status FROM payments p WHERE wedding_id=${wedding.id} ORDER BY (p.status='paid') ASC,p.due_date NULLS LAST,p.created_at DESC`:Promise.resolve([]),
     db`SELECT * FROM guests WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`,
     db`SELECT * FROM rundown_items WHERE wedding_id=${wedding.id} ORDER BY starts_at,sort_order`,
-    db`SELECT * FROM documents WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`,
+    canBudget?db`SELECT * FROM documents WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`:db`SELECT * FROM documents WHERE wedding_id=${wedding.id} AND category NOT IN ('invoice','receipt') ORDER BY created_at DESC`,
     db`SELECT id,display_name,invited_email,role,can_view_budget,status,joined_at FROM wedding_members WHERE wedding_id=${wedding.id} AND status<>'revoked' ORDER BY CASE role WHEN 'owner' THEN 0 WHEN 'partner' THEN 1 WHEN 'collaborator' THEN 2 ELSE 3 END,created_at`,
     canManageTeam?db`SELECT id,invited_email,role,can_view_budget,status,expires_at,created_at FROM member_invites WHERE wedding_id=${wedding.id} AND status='pending' AND expires_at>now() ORDER BY created_at DESC`:Promise.resolve([]),
     db`SELECT id,name,event_type,event_date,start_time FROM wedding_events WHERE wedding_id=${wedding.id} ORDER BY sort_order,event_date,start_time`,
@@ -133,7 +133,7 @@ export default async function Page(){
       <GuestsSection guests={guests as any[]} wedding={wedding} canEdit={canEdit}/>
       <SeatingSection tables={seatingTables as any[]} assignments={seatingAssignments as any[]} guests={guests as any[]} events={events as any[]} canEdit={canEdit}/>
       <VendorsSection vendors={vendors as any[]} canEdit={canEdit}/>
-      <DocumentsSection documents={documents as any[]} usedBytes={usedDocumentBytes} canEdit={canEdit}/>
+      <DocumentsSection documents={documents as any[]} usedBytes={usedDocumentBytes} canEdit={canEdit} canBudget={canBudget} weddingId={String(wedding.id)}/>
       <MembersSection members={members as any[]} invites={invites as any[]} role={String(wedding.role)}/>
       <NotificationsSection items={notifications}/>
       <ActivitySection items={activity as any[]}/>
