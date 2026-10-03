@@ -1,4 +1,5 @@
 import { requireWorkspace } from "@/lib/workspace";
+import { presignStorageDownload } from "@/lib/storage";
 import HomeSection from "@/components/live/home-section";
 import PlanSection from "@/components/live/plan-section";
 import MoneySection from "@/components/live/money-section";
@@ -19,6 +20,7 @@ const diffDays=(v:any)=>{if(!v)return 9999;const d=new Date(v);return Math.ceil(
 
 export default async function Page(){
  const {db,wedding,admin,license}=await requireWorkspace();
+ const coverUrl=wedding.cover_object_key?await presignStorageDownload(String(wedding.cover_object_key)).catch(()=>""):"";
  const canEdit=true,canBudget=true;
  const[tasks,vendors,budgetItems,paymentsRaw,guests,rundown,documents,members,events,seatingTables,seatingAssignments,activity]=await Promise.all([
   db`SELECT * FROM tasks WHERE wedding_id=${wedding.id} ORDER BY (status='done') ASC,due_date NULLS LAST,sort_order,created_at`,
@@ -50,7 +52,7 @@ export default async function Page(){
  const searchItems=[...(tasks as any[]).map(t=>({type:"Task",title:String(t.title),meta:[t.category,t.status].join(" · "),target:"plan"})),...(vendors as any[]).map(v=>({type:"Vendor",title:String(v.name),meta:[v.category,v.status].join(" · "),target:"vendors"})),...(guests as any[]).map(g=>({type:"Guest",title:String(g.name),meta:[g.rsvp_status,g.phone].filter(Boolean).join(" · "),target:"guests"})),...(rundown as any[]).map(r=>({type:"Rundown",title:String(r.activity),meta:[r.location,r.vendor_name].filter(Boolean).join(" · "),target:"plan"})),...(documents as any[]).map(d=>({type:"Document",title:String(d.name),meta:String(d.category||""),target:"vault"})),...payments.map((p:any)=>({type:"Payment",title:String(p.description),meta:[p.vendor_name,p.status].filter(Boolean).join(" · "),target:"money"}))];
  const metrics={days,health,healthLabel,progress,bookedVendors,confirmedPax,safeToSpend,planned,actual,paid,committed,overduePayments};
  return <WeddingStudio couple={wedding.couple_one_name+" & "+wedding.couple_two_name} days={days} admin={Boolean(admin)} search={<GlobalSearch items={searchItems}/>}
-  home={<HomeSection wedding={wedding} metrics={metrics} priorities={priorities} payments={payments}/>}
+  home={<HomeSection wedding={wedding} metrics={metrics} priorities={priorities} payments={payments} coverUrl={coverUrl}/>}
   plan={<PlanSection tasks={tasks as any[]} rundown={rundown as any[]} members={members as any[]} vendors={vendors as any[]} canEdit weddingDate={wedding.wedding_date}/>}
   money={<MoneySection wedding={wedding} metrics={metrics} budgetItems={budgetItems as any[]} payments={payments} vendors={vendors as any[]} canEdit/>}
   guests={<GuestsSection guests={guests as any[]} wedding={wedding} canEdit/>}
@@ -60,6 +62,6 @@ export default async function Page(){
   team={<MembersSection members={members as any[]} invites={[]} role="owner"/>}
   notifications={<NotificationsSection items={notifications}/>}
   activity={<ActivitySection items={activity as any[]}/>}
-  settings={<SettingsSection wedding={wedding} licenseHint={license?.code_hint} admin={Boolean(admin)}/>}
+  settings={<SettingsSection wedding={wedding} licenseHint={license?.code_hint} admin={Boolean(admin)} coverUrl={coverUrl}/>}
  />
 }
