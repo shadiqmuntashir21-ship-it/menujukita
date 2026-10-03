@@ -1,0 +1,31 @@
+name: MenujuKita CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+      NEON_AUTH_BASE_URL: https://example.com/auth
+      NEON_AUTH_COOKIE_SECRET: ci-placeholder-cookie-secret-at-least-32-characters
+      ADMIN_EMAILS: ci@example.com
+      AWS_ACCESS_KEY_ID: ci-placeholder
+      AWS_SECRET_ACCESS_KEY: ci-placeholder
+      AWS_ENDPOINT_URL_S3: https://example.com
+      AWS_REGION: us-east-2
+      NEON_STORAGE_BUCKET: menujukita-private
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install
+      - run: npm run build
