@@ -14,11 +14,11 @@ export default function MoneySection({wedding,metrics,budgetItems,payments,vendo
     <div className="content-grid">
       <div className="panel"><h3>Pengaturan dana wedding</h3>{canEdit?<form action={updateFunds} className="form-grid">
         <label className="field"><span>Total budget</span><input className="input" name="budget_total" type="number" min="0" defaultValue={Number(wedding.budget_total||0)}/></label>
-        <label className="field"><span>Dana tersedia sekarang</span><input className="input" name="available_funds" type="number" min="0" defaultValue={Number(wedding.available_funds||0)}/></label>
+        <label className="field"><span>Dana wedding yang dialokasikan</span><input className="input" name="available_funds" type="number" min="0" defaultValue={Number(wedding.available_funds||0)}/></label>
         <label className="field"><span>Buffer yang dijaga</span><input className="input" name="reserve_buffer" type="number" min="0" defaultValue={Number(wedding.reserve_buffer||0)}/></label>
         <button className="btn btn-primary">Simpan Dana</button>
-      </form>:<div className="formula-box"><span>Total budget</span><strong>{money(wedding.budget_total)}</strong><span>Dana tersedia: {money(wedding.available_funds)}</span><span>Buffer: {money(wedding.reserve_buffer)}</span></div>}</div>
-      <aside className="panel"><h3>Cara Safe to Spend dihitung</h3><p className="muted">Dana tersedia dikurangi pembayaran yang belum lunas dan buffer wedding.</p><div className="formula-box"><span>{money(wedding.available_funds||wedding.budget_total)}</span><b>− {money(metrics.committed)}</b><b>− {money(wedding.reserve_buffer)}</b><strong>= {money(metrics.safeToSpend)}</strong></div></aside>
+      </form>:<div className="formula-box"><span>Total budget</span><strong>{money(wedding.budget_total)}</strong><span>Dana dialokasikan: {money(wedding.available_funds)}</span><span>Buffer: {money(wedding.reserve_buffer)}</span></div>}</div>
+      <aside className="panel"><h3>Cara Safe to Spend dihitung</h3><p className="muted">Dana wedding yang dialokasikan dikurangi pembayaran yang sudah dibayar, komitmen yang belum lunas, dan buffer.</p><div className="formula-box"><span>{money(wedding.available_funds||wedding.budget_total)}</span><b>− {money(metrics.paid)} sudah dibayar</b><b>− {money(metrics.committed)} committed</b><b>− {money(wedding.reserve_buffer)} buffer</b><strong>= {money(metrics.safeToSpend)}</strong></div></aside>
     </div>
 
     <div className="panel">
