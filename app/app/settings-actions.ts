@@ -1,0 +1,30 @@
+"use server";
+
+import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth/server";
+import { requireWorkspace } from "@/lib/workspace";
+import { recordActivity } from "@/lib/activity";
+
+const text=(f:FormData,k:string)=>String(f.get(k)||"").trim();
+const num=(f:FormData,k:string)=>Math.max(0,Number(f.get(k)||0));
+
+export async function updateWeddingSettings(f:FormData){
+  const{db,wedding,session}=await requireWorkspace();
+  if(!["owner","partner"].includes(String(wedding.role)))throw new Error("Settings access denied");
+  const one=text(f,"couple_one_name"),two=text(f,"couple_two_name"),date=text(f,"wedding_date");
+  if(!one||!two||!date)return;
+  const style=text(f,"planning_style");
+  if(!["couple","family","couple_wo","wo"].includes(style))return;
+  await db`UPDATE weddings SET couple_one_name=${one},couple_two_name=${two},wedding_date=${date},city=${text(f,"city")||null},guest_target=${Math.min(5000,num(f,"guest_target"))},planning_style=${style},updated_at=now() WHERE id=${wedding.id}`;
+  await recordActivity(db,wedding.id,session.user.id,"wedding_settings_updated","wedding",wedding.id,{coupleOne:one,coupleTwo:two,date});
+  revalidatePath("/app");
+}
+
+export async function signOut(){
+  await auth.signOut();
+  const jar=await cookies();
+  jar.delete("menujukita_active_wedding");
+  redirect("/");
+}
