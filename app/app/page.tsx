@@ -76,7 +76,7 @@ export default async function Page(){
         <a className="side-link" href="#money"><CircleDollarSign size={18}/>Money</a>
         <a className="side-link" href="#guests"><UsersRound size={18}/>Guests</a>
         <a className="side-link" href="#vendors"><Store size={18}/>Vendor</a>
-        <a className="side-link" href="#rundown"><CalendarClock size={18}/>Rundown</a>
+        <Link className="side-link" href="/app/day-h"><CalendarClock size={18}/>Day-H Mode</Link>
       </div>
     </aside>
     <main className="main live-main">
