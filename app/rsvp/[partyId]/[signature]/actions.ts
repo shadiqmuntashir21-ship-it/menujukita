@@ -18,6 +18,7 @@ export async function submitRsvp(partyId:string,signature:string,f:FormData){
   const ip=forwarded.split(",")[0].trim();
   const hour=new Date().toISOString().slice(0,13);
   const rateKey=hash("rsvp|"+partyId+"|"+ip+"|"+hour);
+  await db`DELETE FROM public_rate_limits WHERE window_start<now()-interval '48 hours'`;
   const rate=await db`INSERT INTO public_rate_limits(rate_key,hit_count,window_start,updated_at)
     VALUES(${rateKey},1,date_trunc('hour',now()),now())
     ON CONFLICT(rate_key) DO UPDATE SET hit_count=public_rate_limits.hit_count+1,updated_at=now()
