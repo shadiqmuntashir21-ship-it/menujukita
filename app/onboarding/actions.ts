@@ -19,8 +19,6 @@ export async function activateWedding(f:FormData){
   if(!one||!two||!weddingDate) redirect("/onboarding?error=data");
   const db=sql();
 
-  const existing=await db`SELECT w.id FROM weddings w JOIN wedding_members m ON m.wedding_id=w.id WHERE m.auth_user_id=${s.user.id} AND w.status='active' AND m.status='active' LIMIT 1`;
-  if(existing[0]) redirect("/app");
 
   const lic=await db`SELECT id,status FROM licenses WHERE code_hash=${hash(code)} LIMIT 1`;
   if(!lic[0]||lic[0].status!=="unused") redirect("/onboarding?error=license");
