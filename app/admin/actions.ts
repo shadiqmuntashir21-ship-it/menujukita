@@ -29,8 +29,11 @@ export async function generateLicenses(_prev:State|null,f:FormData):Promise<Stat
 export async function changeLicenseStatus(f:FormData){
   const {db}=await requireAdmin();
   const id=String(f.get("id")||""),status=String(f.get("status")||"");
-  if(!["suspended","revoked","unused"].includes(status))return;
-  if(status==="unused"){
+  if(!["active","suspended","revoked","unused"].includes(status))return;
+
+  if(status==="active"){
+    await db`UPDATE licenses SET status='active',updated_at=now() WHERE id=${id} AND wedding_id IS NOT NULL AND status='suspended'`;
+  }else if(status==="unused"){
     await db`UPDATE licenses SET status='unused',wedding_id=NULL,activated_by_auth_user_id=NULL,activated_at=NULL,updated_at=now() WHERE id=${id} AND status!='active'`;
   }else{
     await db`UPDATE licenses SET status=${status},updated_at=now() WHERE id=${id}`;
