@@ -15,7 +15,7 @@ export default async function Page(){
   const licenses=await db`SELECT l.id,l.code_hint,l.status,l.activated_at,l.created_at,l.expires_at,
     w.couple_one_name,w.couple_two_name,w.wedding_date
     FROM licenses l LEFT JOIN weddings w ON w.id=l.wedding_id
-    ORDER BY CASE l.status WHEN 'active' THEN 0 WHEN 'unused' THEN 1 ELSE 2 END,l.created_at DESC LIMIT 100`;
+    ORDER BY CASE l.status WHEN 'active' THEN 0 WHEN 'unused' THEN 1 WHEN 'suspended' THEN 2 ELSE 3 END,l.created_at DESC LIMIT 100`;
   const used=Number(cap?.active||0),max=Number(cap?.max_active_weddings||250);
   return <main className="container section admin-page">
     <div className="brand"><span className="brand-mark">M</span><span className="brand-copy"><strong>MenujuKita Admin</strong><small>Teman Digital · Pilot Control</small></span></div>
@@ -31,7 +31,18 @@ export default async function Page(){
       <section className="panel"><h3>Aturan Pilot</h3><div className="stat-line"><span>Hard limit active wedding</span><b>{max}</b></div><div className="stat-line"><span>Demo</span><b>Tidak dihitung</b></div><div className="stat-line"><span>Activation code</span><b>Hash-only storage</b></div></section>
     </div>
     <section className="panel" style={{marginTop:14}}><div className="panel-title"><div><h3>License Registry</h3><p className="muted compact">100 lisensi terbaru. Kode penuh hanya tampil sekali saat generate.</p></div></div>
-      <div className="table-wrap"><table className="admin-table"><thead><tr><th>Kode</th><th>Status</th><th>Wedding</th><th>Aktivasi</th><th>Aksi</th></tr></thead><tbody>{(licenses as any[]).map(l=><tr key={l.id}><td><code>••••-{l.code_hint}</code></td><td><span className={"status-pill "+l.status}>{l.status}</span></td><td>{l.couple_one_name?<><b>{l.couple_one_name} & {l.couple_two_name}</b><small>{l.wedding_date?new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(l.wedding_date)):""}</small></>:"—"}</td><td>{l.activated_at?new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(l.activated_at)):"—"}</td><td>{l.status==="active"?<form action={changeLicenseStatus}><input type="hidden" name="id" value={l.id}/><button className="btn btn-sm" name="status" value="suspended">Suspend</button></form>:l.status==="unused"?<form action={changeLicenseStatus}><input type="hidden" name="id" value={l.id}/><button className="btn btn-sm" name="status" value="revoked">Revoke</button></form>:<span className="muted">—</span>}</td></tr>)}</tbody></table></div>
+      <div className="table-wrap"><table className="admin-table"><thead><tr><th>Kode</th><th>Status</th><th>Wedding</th><th>Aktivasi</th><th>Aksi</th></tr></thead><tbody>{(licenses as any[]).map(l=><tr key={l.id}>
+        <td><code>••••-{l.code_hint}</code></td>
+        <td><span className={"status-pill "+l.status}>{l.status}</span></td>
+        <td>{l.couple_one_name?<><b>{l.couple_one_name} & {l.couple_two_name}</b><small>{l.wedding_date?new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(l.wedding_date)):""}</small></>:"—"}</td>
+        <td>{l.activated_at?new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(l.activated_at)):"—"}</td>
+        <td>
+          {l.status==="active"&&<form action={changeLicenseStatus}><input type="hidden" name="id" value={l.id}/><button className="btn btn-sm" name="status" value="suspended">Suspend</button></form>}
+          {l.status==="suspended"&&<form action={changeLicenseStatus}><input type="hidden" name="id" value={l.id}/><button className="btn btn-primary btn-sm" name="status" value="active">Activate</button></form>}
+          {l.status==="unused"&&<form action={changeLicenseStatus}><input type="hidden" name="id" value={l.id}/><button className="btn btn-sm" name="status" value="revoked">Revoke</button></form>}
+          {l.status==="revoked"&&<span className="muted">Final</span>}
+        </td>
+      </tr>)}</tbody></table></div>
     </section>
   </main>
 }
