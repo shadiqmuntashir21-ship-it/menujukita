@@ -1,34 +1,68 @@
 import Link from "next/link";
-import { ArrowRight,Armchair,CalendarClock,Check,CheckCircle2,CircleDollarSign,FileText,HeartPulse,ListChecks,LockKeyhole,Sparkles,Store,UsersRound,WalletCards } from "lucide-react";
+import { ArrowRight, CalendarClock, Check, CircleDollarSign, HeartPulse, ListChecks, Sparkles, Store, UsersRound } from "lucide-react";
+
 const features=[
- [ListChecks,"Wedding Journey","Checklist bergerak mengikuti fase wedding, lengkap dengan deadline, prioritas, dan PIC."],
- [WalletCards,"Wedding Wallet","Budget, pembayaran, committed cost, dan Safe to Spend dalam satu tampilan yang mudah dipahami."],
- [Store,"Vendor Partners","Simpan kandidat, kontak, harga penawaran, harga deal, status, dan catatan vendor."],
- [UsersRound,"Guest Book + RSVP","Kelola tamu dan party, pax, status RSVP, link RSVP publik, hingga follow-up."],
- [Armchair,"Visual Seating","Susun meja, kapasitas, event, dan penempatan tamu tanpa spreadsheet berantakan."],
- [CalendarClock,"Day-H Mode","Mode fokus untuk rundown, agenda berikutnya, kontak vendor, dan pembayaran tersisa."]
+  [ListChecks,"Checklist & Timeline","Tahu apa yang harus dilakukan sekarang, bukan tenggelam dalam daftar panjang."],
+  [CircleDollarSign,"Budget & Safe to Spend","Lihat uang yang benar-benar masih aman digunakan setelah seluruh komitmen pembayaran."],
+  [UsersRound,"Guest & RSVP","Kelola undangan, pax, RSVP, kelompok tamu, sampai seating dengan lebih tenang."],
+  [Store,"Vendor Partners","Simpan kandidat, status deal, harga, kontak, pembayaran, dan catatan penting vendor."],
+  [HeartPulse,"Wedding Health","Satu ringkasan yang menunjukkan bagian persiapan yang aman dan yang perlu perhatian."],
+  [CalendarClock,"Day-H Mode","Saat hari H tiba, MenujuKita berubah menjadi pusat kendali rundown yang simpel."]
 ] as const;
-const steps=[["01","Beli akses","Dapatkan Kode Lisensi + PIN dari Teman Digital."],["02","Setup wedding","Isi nama pasangan, tanggal, kota, budget, dan target tamu."],["03","Plan together","Masuk dari HP atau laptop dengan akses wedding yang sama."],["04","Enjoy the day","Saat hari H, buka mode fokus dan jalankan rundown."]] as const;
-export default function Home(){return <main className="landing">
- <nav className="landing-nav"><div className="landing-container landing-nav-inner"><Link className="brand" href="/"><span className="brand-mark">M</span><span className="brand-copy"><strong>MenujuKita</strong><small>Plan the journey. Enjoy the day.</small></span></Link><div className="landing-nav-links"><a href="#features">Fitur</a><a href="#pricing">Harga</a><Link className="btn btn-soft btn-sm" href="/auth/sign-in">Masuk</Link><Link className="btn btn-primary btn-sm" href="/demo">Coba Demo</Link></div></div></nav>
 
- <section className="landing-hero"><div className="landing-container landing-hero-grid">
-  <div className="hero-copy"><span className="eyebrow">WEDDING PLANNING STUDIO</span><h1 className="serif">Persiapan wedding<br/><em>tanpa terasa seperti kerja lembur.</em></h1><p className="lead">MenujuKita menyatukan checklist, budget, vendor, tamu, RSVP, seating, dokumen, dan rundown hari H ke satu ruang kerja yang tenang.</p><div className="actions"><Link className="btn btn-primary landing-cta" href="/demo">Coba Demo Tanpa Daftar <ArrowRight size={17}/></Link><a className="btn landing-cta" href="#pricing">Lihat Promo Rp49.000</a></div><div className="hero-proof"><span><CheckCircle2 size={14}/>Demo tanpa login</span><span><CheckCircle2 size={14}/>1 lisensi = 1 wedding</span><span><CheckCircle2 size={14}/>Bisa dipakai dari HP & laptop</span></div></div>
-  <div className="product-stage">
-   <div className="product-window"><div className="window-top"><span/><span/><span/><small>ALYA & RAKA · WEDDING STUDIO</small></div><div className="window-body"><aside><b>M</b>{[ListChecks,CircleDollarSign,UsersRound,Store,FileText].map((I,i)=><i key={i}><I size={16}/></i>)}</aside><section><small>GOOD TO SEE YOU</small><h2 className="serif">Alya <em>&</em> Raka</h2><p><b>134 hari</b> menuju hari kalian.</p><div className="mock-attention"><span>WHAT NEEDS YOUR ATTENTION</span><div><b>01</b><p><strong>Finalisasi menu catering</strong><small>Deadline 3 hari lagi</small></p><i>Task</i></div><div><b>02</b><p><strong>Bayar Photography Payment II</strong><small>Jatuh tempo 5 hari lagi</small></p><i>Payment</i></div></div></section><aside className="mock-side"><div><small>WEDDING HEALTH</small><strong>82</strong><span>On Track</span></div><div><small>SAFE TO SPEND</small><strong>Rp49,7 jt</strong></div></aside></div></div>
-   <div className="floating-note note-one"><HeartPulse size={16}/><span><b>82/100</b> wedding health</span></div><div className="floating-note note-two"><Sparkles size={16}/><span>prioritas otomatis</span></div>
-  </div>
- </div></section>
+export default function Home(){
+ return <main className="mk-landing">
+  <section className="mk-hero" style={{backgroundImage:"url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2200&q=88')"}}>
+   <div className="mk-hero-shade"/>
+   <nav className="mk-nav">
+    <Link className="mk-brand" href="/"><span>M</span><div><b>MenujuKita</b><small>Plan the journey. Enjoy the day.</small></div></Link>
+    <div className="mk-nav-links"><a href="#fitur">Fitur</a><a href="#cara-kerja">Cara Kerja</a><a href="#harga">Harga</a><Link href="/auth/sign-in">Masuk</Link></div>
+    <Link className="mk-nav-cta" href="/demo">Coba Demo <ArrowRight size={15}/></Link>
+   </nav>
 
- <section className="calm-strip"><div className="landing-container"><p>Planning bukan tentang membuat semakin banyak checklist. <b>Planning yang baik membuat kalian tahu apa yang perlu dilakukan berikutnya.</b></p></div></section>
+   <div className="mk-hero-content">
+    <span className="mk-kicker">WEDDING PLANNING, BUT CALMER.</span>
+    <h1>Semua detail menuju<br/><em>hari kalian.</em></h1>
+    <p>Checklist, budget, tamu, vendor, timeline, dokumen, sampai Hari-H—dirapikan dalam satu ruang yang terasa personal, bukan seperti dashboard kantor.</p>
+    <div className="mk-hero-actions"><Link className="mk-button mk-button-light" href="/demo">Coba Demo Tanpa Daftar <ArrowRight size={17}/></Link><a className="mk-button mk-button-glass" href="#harga">Mulai Rp49.000</a></div>
+   </div>
 
- <section className="landing-section" id="features"><div className="landing-container"><div className="section-intro"><span className="eyebrow">SATU JOURNEY</span><h2 className="serif">Dari “mulai dari mana?”<br/>sampai “hari ini tinggal jalankan.”</h2><p>Bukan dashboard bisnis yang diganti warna. MenujuKita dirancang sebagai ruang kerja pasangan untuk perjalanan menuju hari H.</p></div><div className="feature-editorial-grid">{features.map(([I,title,copy],i)=><article className={"feature-editorial feature-"+i} key={title}><div className="feature-icon"><I size={20}/></div><small>{String(i+1).padStart(2,"0")}</small><h3>{title}</h3><p>{copy}</p></article>)}</div></div></section>
+   <div className="mk-feature-ribbon">
+    <button type="button"><ListChecks size={18}/><span><small>PLAN</small>Checklist</span></button>
+    <button type="button"><CircleDollarSign size={18}/><span><small>MONEY</small>Budget</span></button>
+    <button type="button"><UsersRound size={18}/><span><small>PEOPLE</small>Guests</span></button>
+    <button type="button"><Store size={18}/><span><small>PARTNERS</small>Vendors</span></button>
+    <button type="button"><CalendarClock size={18}/><span><small>THE DAY</small>Day-H</span></button>
+   </div>
+  </section>
 
- <section className="landing-section journey-section"><div className="landing-container"><div className="section-intro compact-intro"><span className="eyebrow">SIMPLE ACCESS</span><h2 className="serif">Tidak perlu daftar akun.</h2><p>Setelah pembelian, kalian mendapat satu akses wedding yang bisa dipakai bersama.</p></div><div className="access-journey">{steps.map(([n,t,c])=><article key={n}><b>{n}</b><div><h3>{t}</h3><p>{c}</p></div></article>)}</div></div></section>
+  <section className="mk-intro">
+   <span className="mk-kicker dark">BUKAN SEKADAR CHECKLIST</span>
+   <h2>Ruang persiapan wedding yang<br/><em>terasa seperti milik kalian sendiri.</em></h2>
+   <p>Foto pasangan menjadi wajah utama workspace. Setiap wedding punya cover, countdown, progres, prioritas, dan data sendiri—semuanya bisa dikelola dari HP maupun laptop.</p>
+  </section>
 
- <section className="landing-section demo-callout"><div className="landing-container demo-callout-inner"><div><span className="eyebrow">NO COMMITMENT</span><h2 className="serif">Coba dulu. Ubah datanya. Rasakan flow-nya.</h2><p>Demo menggunakan wedding Alya & Raka dan menyimpan perubahan hanya di browser. Tidak masuk Neon, tidak memakai lisensi, dan bisa di-reset kapan saja.</p></div><Link className="btn btn-primary landing-cta" href="/demo">Masuk Demo Pro <ArrowRight size={17}/></Link></div></section>
+  <section className="mk-feature-section" id="fitur">
+   <div className="mk-section-head"><div><span className="mk-kicker dark">THE WEDDING STUDIO</span><h2>Satu perjalanan.<br/>Semua yang penting.</h2></div><p>MenujuKita sengaja tidak dibuat seperti software bisnis. Data tetap kuat, tetapi pengalaman tetap hangat dan mudah dibaca.</p></div>
+   <div className="mk-feature-grid">{features.map(([Icon,title,copy],i)=><article key={title}><span className="mk-feature-no">{String(i+1).padStart(2,"0")}</span><div className="mk-feature-icon"><Icon size={20}/></div><h3>{title}</h3><p>{copy}</p></article>)}</div>
+  </section>
 
- <section className="landing-section pricing-section" id="pricing"><div className="landing-container pricing-layout"><div className="pricing-copy"><span className="eyebrow">PILOT OFFER</span><h2 className="serif">Satu harga untuk<br/>satu perjalanan wedding.</h2><p>Tidak ada tier yang membingungkan. Untuk pilot awal, seluruh fitur inti MenujuKita tersedia dalam satu lisensi wedding.</p><div className="price-promise"><LockKeyhole size={18}/><span>Akses memakai <b>Kode Lisensi + PIN</b>, bukan email/password.</span></div></div><article className="price-card"><span className="price-badge">PROMO PILOT</span><div className="price"><small>Rp</small><strong>49.000</strong><span>/ wedding</span></div><p>Satu kali bayar untuk akses pilot satu Wedding Workspace.</p><div className="price-list">{["Wedding Journey & checklist","Budget + Safe to Spend","Vendor manager & payments","Guest Book + public RSVP","Visual seating plan","Private Document Vault","Day-H Mode","Akses dari HP & laptop"].map(x=><span key={x}><Check size={14}/>{x}</span>)}</div><Link className="btn btn-primary landing-cta full" href="/auth/sign-in">Sudah Punya Akses? Masuk</Link><p className="purchase-note">Pembelian promo Rp49.000 diproses langsung oleh Teman Digital.</p><small className="price-note">Lisensi pilot dibatasi maksimal 250 wedding aktif.</small></article></div></section>
+  <section className="mk-product-story">
+   <div className="mk-product-copy"><span className="mk-kicker">PERSONAL BY DEFAULT</span><h2>Begitu dibuka,<br/>yang terlihat adalah <em>kalian.</em></h2><p>Setiap user dapat mengganti foto cover wedding sendiri. Foto itu menjadi hero utama dashboard, dengan overlay otomatis agar countdown, nama pasangan, dan status persiapan tetap terbaca.</p><ul><li><Check size={16}/>Upload JPG, PNG, atau WEBP</li><li><Check size={16}/>Atur posisi foto dan tingkat overlay</li><li><Check size={16}/>Bisa diganti kapan saja dari Settings</li></ul></div>
+   <div className="mk-product-card" style={{backgroundImage:"url('https://images.unsplash.com/photo-1606800052052-a08af7148866?auto=format&fit=crop&w=1400&q=88')"}}><div className="mk-product-overlay"/><div className="mk-product-ui"><small>NADIA & ARGA</small><strong>128 hari lagi</strong><span>Persiapan 68% selesai</span><div><b>Wedding Health</b><em>82 · On Track</em></div></div></div>
+  </section>
 
- <footer className="landing-footer"><div className="landing-container"><div className="brand"><span className="brand-mark">M</span><span className="brand-copy"><strong>MenujuKita</strong><small>Plan the journey. Enjoy the day.</small></span></div><p>Created by <b>Teman Digital</b></p></div></footer>
- </main>}
+  <section className="mk-how" id="cara-kerja">
+   <div className="mk-section-head"><div><span className="mk-kicker dark">SIMPLE FLOW</span><h2>Dari beli akses sampai Hari-H.</h2></div></div>
+   <div className="mk-steps"><article><b>01</b><h3>Dapatkan akses</h3><p>Setelah pembelian, kalian menerima Kode Lisensi + PIN.</p></article><article><b>02</b><h3>Setup wedding</h3><p>Isi nama pasangan, tanggal, budget, target tamu, dan foto favorit kalian.</p></article><article><b>03</b><h3>Plan together</h3><p>Kelola persiapan dari satu wedding workspace yang sama.</p></article><article><b>04</b><h3>Enjoy the day</h3><p>Masuk ke Day-H Mode dan fokus menjalankan rundown.</p></article></div>
+  </section>
+
+  <section className="mk-pricing" id="harga">
+   <div><span className="mk-kicker">PILOT OFFER</span><h2>Satu harga.<br/>Satu wedding workspace.</h2><p>Seluruh fitur inti tersedia dalam satu lisensi pilot. Tidak ada tier yang bikin bingung.</p></div>
+   <article><small>PROMO PILOT</small><div className="mk-price"><span>Rp</span><strong>49.000</strong></div><p>Satu kali bayar untuk satu wedding workspace.</p><div className="mk-price-list">{["Checklist & Timeline","Budget + Safe to Spend","Guest & RSVP","Vendor & Payments","Visual Seating","Private Vault","Wedding Health","Day-H Mode"].map(x=><span key={x}><Check size={14}/>{x}</span>)}</div><Link className="mk-button mk-button-dark" href="/auth/sign-in">Sudah punya akses? Masuk <ArrowRight size={16}/></Link><small>Maksimal 250 wedding aktif pada fase pilot.</small></article>
+  </section>
+
+  <section className="mk-final-cta"><Sparkles size={22}/><h2>Persiapannya serius.<br/><em>Rasanya tetap harus menyenangkan.</em></h2><Link className="mk-button mk-button-dark" href="/demo">Masuk Demo Pro <ArrowRight size={16}/></Link></section>
+  <footer className="mk-footer"><div className="mk-brand dark"><span>M</span><div><b>MenujuKita</b><small>Plan the journey. Enjoy the day.</small></div></div><p>Created by <b>Teman Digital</b></p></footer>
+ </main>
+}
