@@ -1,88 +1,98 @@
-import LiveWorkspace from "./live-workspace";
+import Link from "next/link";
+import { CalendarClock, CircleDollarSign, Home, ListChecks, Store, UsersRound } from "lucide-react";
 import { requireWorkspace } from "@/lib/workspace";
-import { signRsvpParty } from "@/lib/rsvp";
+import HomeSection from "@/components/live/home-section";
+import PlanSection from "@/components/live/plan-section";
+import MoneySection from "@/components/live/money-section";
+import GuestsSection from "@/components/live/guests-section";
+import VendorsSection from "@/components/live/vendors-section";
 
-export const dynamic = "force-dynamic";
+export const dynamic="force-dynamic";
 
-const clamp=(n:number,min=0,max=100)=>Math.max(min,Math.min(max,n));
-const toNum=(v:any)=>Number(v||0);
+const n=(v:any)=>Number(v||0);
+const diffDays=(v:any)=>{if(!v)return 9999;const d=new Date(v);return Math.ceil((d.getTime()-Date.now())/86400000)};
 
 export default async function Page(){
   const {db,wedding}=await requireWorkspace();
-
-  const [tasks,vendors,budgetItems,payments,guestRows,rundown]=await Promise.all([
-    db`SELECT * FROM tasks WHERE wedding_id=${wedding.id} ORDER BY CASE WHEN status='done' THEN 1 ELSE 0 END,due_date NULLS LAST,created_at`,
-    db`SELECT * FROM vendors WHERE wedding_id=${wedding.id} ORDER BY CASE status WHEN 'booked' THEN 0 WHEN 'negotiating' THEN 1 ELSE 2 END,created_at DESC`,
+  const [tasks,vendors,budgetItems,paymentsRaw,guests,rundown]=await Promise.all([
+    db`SELECT * FROM tasks WHERE wedding_id=${wedding.id} ORDER BY (status='done') ASC,due_date NULLS LAST,sort_order,created_at`,
+    db`SELECT * FROM vendors WHERE wedding_id=${wedding.id} ORDER BY CASE status WHEN 'booked' THEN 1 WHEN 'negotiating' THEN 2 WHEN 'shortlisted' THEN 3 ELSE 4 END,created_at DESC`,
     db`SELECT * FROM budget_items WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`,
-    db`SELECT p.*,v.name vendor_name FROM payments p LEFT JOIN vendors v ON v.id=p.vendor_id WHERE p.wedding_id=${wedding.id} ORDER BY CASE WHEN p.status='overdue' THEN 0 WHEN p.status='upcoming' THEN 1 ELSE 2 END,p.due_date NULLS LAST,p.created_at DESC`,
-    db`SELECT g.*,gp.group_name,gp.side,gp.max_pax,gp.id party_id FROM guests g LEFT JOIN guest_parties gp ON gp.id=g.party_id WHERE g.wedding_id=${wedding.id} ORDER BY g.created_at DESC`,
-    db`SELECT * FROM rundown_items WHERE wedding_id=${wedding.id} ORDER BY starts_at`
+    db`SELECT p.*,CASE WHEN p.status='upcoming' AND p.due_date<CURRENT_DATE THEN 'overdue' ELSE p.status END AS display_status FROM payments p WHERE wedding_id=${wedding.id} ORDER BY (p.status='paid') ASC,p.due_date NULLS LAST,p.created_at DESC`,
+    db`SELECT * FROM guests WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`,
+    db`SELECT * FROM rundown_items WHERE wedding_id=${wedding.id} ORDER BY starts_at,sort_order`
   ]);
 
-  const now=new Date();
-  const in7=new Date(now.getTime()+7*86400000);
-  const liveTasks=tasks as any[], liveVendors=vendors as any[], liveBudget=budgetItems as any[], livePayments=payments as any[], liveGuests=guestRows as any[], liveRundown=rundown as any[];
+  const payments=(paymentsRaw as any[]).map(p=>({...p,status:p.display_status||p.status}));
+  const total=tasks.length;
+  const done=tasks.filter((t:any)=>t.status==="done").length;
+  const progress=total?Math.round(done/total*100):0;
+  const days=wedding.wedding_date?Math.max(0,diffDays(wedding.wedding_date)):0;
+  const planned=budgetItems.reduce((s:any,b:any)=>s+n(b.planned_amount),0);
+  const actual=budgetItems.reduce((s:any,b:any)=>s+n(b.actual_amount||b.planned_amount),0);
+  const budgetPaid=budgetItems.reduce((s:any,b:any)=>s+n(b.paid_amount),0);
+  const paymentPaid=payments.filter((p:any)=>p.status==="paid").reduce((s:any,p:any)=>s+n(p.amount),0);
+  const paid=payments.length?paymentPaid:budgetPaid;
+  const committed=payments.filter((p:any)=>p.status!=="paid"&&p.status!=="cancelled").reduce((s:any,p:any)=>s+n(p.amount),0);
+  const moneyBase=n(wedding.available_funds)>0?n(wedding.available_funds):n(wedding.budget_total);
+  const safeToSpend=Math.max(0,moneyBase-committed-n(wedding.reserve_buffer));
+  const bookedVendors=vendors.filter((v:any)=>["booked","completed"].includes(v.status)).length;
+  const confirmedPax=guests.filter((g:any)=>g.rsvp_status==="attending").reduce((s:any,g:any)=>s+n(g.actual_pax||g.expected_pax||1),0);
+  const overduePayments=payments.filter((p:any)=>p.status==="overdue").length;
 
-  const taskTotal=liveTasks.length;
-  const taskDone=liveTasks.filter(x=>x.status==="done").length;
-  const overdueTasks=liveTasks.filter(x=>x.status!=="done"&&x.due_date&&new Date(x.due_date)<now);
-  const progress=taskTotal?Math.round(taskDone/taskTotal*100):0;
-  const taskScore=taskTotal?clamp(Math.round(progress-overdueTasks.length*5)):60;
-
-  const budgetTotal=toNum(wedding.budget_total);
-  const projected=liveBudget.reduce((s,x)=>s+Math.max(toNum(x.actual_amount),toNum(x.planned_amount)),0);
-  const budgetScore=budgetTotal<=0?60:projected<=budgetTotal?100:clamp(Math.round(100-((projected-budgetTotal)/budgetTotal)*100),25,100);
-
-  const vendorTotal=liveVendors.length;
-  const bookedVendors=liveVendors.filter(x=>["booked","completed"].includes(x.status)).length;
-  const vendorScore=vendorTotal?clamp(Math.round(bookedVendors/vendorTotal*100)):50;
-
-  const overduePayments=livePayments.filter(x=>x.status!=="paid"&&x.due_date&&new Date(x.due_date)<now);
-  const paymentScore=clamp(100-overduePayments.length*20,35,100);
-
-  const attending=liveGuests.filter(x=>x.rsvp_status==="attending").reduce((s,x)=>s+Math.max(1,toNum(x.actual_pax||x.expected_pax||1)),0);
-  const waiting=liveGuests.filter(x=>["waiting","not_sent"].includes(x.rsvp_status)).length;
-  const responded=liveGuests.filter(x=>!["waiting","not_sent"].includes(x.rsvp_status)).length;
-  const guestScore=liveGuests.length?clamp(Math.round(responded/liveGuests.length*100)):50;
-
-  const health=clamp(Math.round(taskScore*.35+budgetScore*.25+vendorScore*.20+paymentScore*.10+guestScore*.10));
+  const taskScore=total?done/total*100:70;
+  const budgetTotal=n(wedding.budget_total);
+  const projection=actual||planned;
+  const budgetScore=!budgetTotal?80:projection<=budgetTotal?100:Math.max(20,100-((projection-budgetTotal)/budgetTotal*100));
+  const vendorScore=vendors.length?bookedVendors/vendors.length*100:(days>120?80:60);
+  const paymentScore=Math.max(20,100-overduePayments*25);
+  const guestRaw=n(wedding.guest_target)?Math.min(100,confirmedPax/n(wedding.guest_target)*100):80;
+  const guestScore=days>60?Math.max(70,guestRaw):Math.max(40,guestRaw);
+  const health=Math.round(taskScore*.35+budgetScore*.25+vendorScore*.20+paymentScore*.10+guestScore*.10);
   const healthLabel=health>=90?"Excellent":health>=75?"On Track":health>=60?"Needs Attention":"At Risk";
 
-  const paidPayments=livePayments.filter(x=>x.status==="paid").reduce((s,x)=>s+toNum(x.amount),0);
-  const outstanding=livePayments.filter(x=>x.status!=="paid"&&x.status!=="cancelled").reduce((s,x)=>s+toNum(x.amount),0);
-  const available=toNum(wedding.available_funds)>0?toNum(wedding.available_funds):Math.max(0,budgetTotal-paidPayments);
-  const safeToSpend=Math.max(0,available-outstanding-toNum(wedding.reserve_buffer));
+  const priorities:{title:string;meta:string;kind:string;score:number}[]=[];
+  (tasks as any[]).filter(t=>t.status!=="done"&&t.due_date).forEach(t=>{
+    const d=diffDays(t.due_date);
+    if(d<0)priorities.push({title:t.title,meta:`Terlambat ${Math.abs(d)} hari`,kind:"Task",score:100+Math.abs(d)});
+    else if(d<=14)priorities.push({title:t.title,meta:d===0?"Deadline hari ini":`Deadline ${d} hari lagi`,kind:"Task",score:80-d});
+  });
+  payments.filter((p:any)=>p.status!=="paid"&&p.status!=="cancelled"&&p.due_date).forEach((p:any)=>{
+    const d=diffDays(p.due_date);
+    if(d<0)priorities.push({title:`Bayar ${p.description}`,meta:`Pembayaran terlambat ${Math.abs(d)} hari`,kind:"Payment",score:120});
+    else if(d<=14)priorities.push({title:`Bayar ${p.description}`,meta:d===0?"Jatuh tempo hari ini":`Jatuh tempo ${d} hari lagi`,kind:"Payment",score:90-d});
+  });
+  (vendors as any[]).filter(v=>["negotiating","contacted"].includes(v.status)).slice(0,2).forEach(v=>priorities.push({title:`Finalisasi ${v.name}`,meta:`${v.category} masih ${v.status}`,kind:"Vendor",score:55}));
+  priorities.sort((a,b)=>b.score-a.score);
 
-  const priorities:any[]=[];
-  overdueTasks.slice(0,3).forEach(x=>priorities.push({level:"critical",title:x.title,meta:`Task overdue · ${new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"short"}).format(new Date(x.due_date))}`}));
-  livePayments.filter(x=>x.status!=="paid"&&x.due_date&&new Date(x.due_date)<now).slice(0,2).forEach(x=>priorities.push({level:"critical",title:`Bayar ${x.description}`,meta:`Overdue · Rp ${new Intl.NumberFormat("id-ID").format(toNum(x.amount))}`}));
-  liveTasks.filter(x=>x.status!=="done"&&x.due_date&&new Date(x.due_date)>=now&&new Date(x.due_date)<=in7).slice(0,3).forEach(x=>priorities.push({level:"important",title:x.title,meta:"Deadline dalam 7 hari"}));
-  livePayments.filter(x=>x.status==="upcoming"&&x.due_date&&new Date(x.due_date)>=now&&new Date(x.due_date)<=in7).slice(0,2).forEach(x=>priorities.push({level:"important",title:`Siapkan ${x.description}`,meta:`Jatuh tempo ≤7 hari · Rp ${new Intl.NumberFormat("id-ID").format(toNum(x.amount))}`}));
-  const vendorAttention=liveVendors.filter(x=>["searching","negotiating","contacted"].includes(x.status));
-  if(vendorAttention.length) priorities.push({level:"info",title:`${vendorAttention.length} vendor masih perlu keputusan`,meta:"Buka Vendor Manager untuk lanjutkan"});
-  if(waiting) priorities.push({level:"info",title:`${waiting} undangan belum memberi RSVP`,meta:"Follow-up guest list"});
+  const metrics={days,health,healthLabel,progress,bookedVendors,confirmedPax,safeToSpend,planned,actual,paid,committed,overduePayments};
 
-  const days=wedding.wedding_date?Math.max(0,Math.ceil((new Date(wedding.wedding_date).getTime()-Date.now())/86400000)):0;
-  const guests=liveGuests.map(g=>({...g,rsvp_path:g.party_id?`/rsvp/${g.party_id}?sig=${signRsvpParty(g.party_id)}`:""}));
-
-  const summary={
-    progress,taskScore,budgetScore,vendorScore,paymentScore,guestScore,
-    attending,waiting,bookedVendors,vendorTotal,paidPayments,outstanding
-  };
-
-  return <LiveWorkspace
-    wedding={wedding}
-    summary={summary}
-    tasks={liveTasks}
-    vendors={liveVendors}
-    budgetItems={liveBudget}
-    payments={livePayments}
-    guests={guests}
-    rundown={liveRundown}
-    priorities={priorities}
-    health={health}
-    healthLabel={healthLabel}
-    safeToSpend={safeToSpend}
-    days={days}
-  />;
+  return <div className="demo-shell live-shell">
+    <aside className="sidebar">
+      <Link className="brand" href="/"><span className="brand-mark">M</span><span className="brand-copy"><strong>MenujuKita</strong><small>Live Workspace</small></span></Link>
+      <div className="side-menu">
+        <a className="side-link active" href="#home"><Home size={18}/>Home</a>
+        <a className="side-link" href="#plan"><ListChecks size={18}/>Plan</a>
+        <a className="side-link" href="#money"><CircleDollarSign size={18}/>Money</a>
+        <a className="side-link" href="#guests"><UsersRound size={18}/>Guests</a>
+        <a className="side-link" href="#vendors"><Store size={18}/>Vendor</a>
+        <a className="side-link" href="#rundown"><CalendarClock size={18}/>Rundown</a>
+      </div>
+    </aside>
+    <main className="main live-main">
+      <div className="topline"><div><small className="muted">LIVE WEDDING</small><h2 style={{margin:"4px 0 0"}}>{wedding.couple_one_name} & {wedding.couple_two_name}</h2></div><span className="badge">Cloud · Neon</span></div>
+      <HomeSection wedding={wedding} metrics={metrics} priorities={priorities} payments={payments}/>
+      <PlanSection tasks={tasks as any[]} rundown={rundown as any[]}/>
+      <MoneySection wedding={wedding} metrics={metrics} budgetItems={budgetItems as any[]} payments={payments}/>
+      <GuestsSection guests={guests as any[]} wedding={wedding}/>
+      <VendorsSection vendors={vendors as any[]}/>
+    </main>
+    <nav className="mobile-nav live-mobile-nav">
+      <a href="#home"><Home size={18}/><small>Home</small></a>
+      <a href="#plan"><ListChecks size={18}/><small>Plan</small></a>
+      <a href="#money"><CircleDollarSign size={18}/><small>Money</small></a>
+      <a href="#guests"><UsersRound size={18}/><small>Guests</small></a>
+      <a href="#vendors"><Store size={18}/><small>Vendor</small></a>
+    </nav>
+  </div>;
 }
