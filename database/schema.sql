@@ -317,7 +317,7 @@ CREATE INDEX IF NOT EXISTS idx_member_invites_token_status ON member_invites(tok
 CREATE UNIQUE INDEX IF NOT EXISTS uq_active_owner_per_wedding ON wedding_members(wedding_id) WHERE role='owner' AND status='active';
 
 CREATE OR REPLACE FUNCTION enforce_same_wedding_references()
-RETURNS trigger LANGUAGE plpgsql AS $
+RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   IF TG_TABLE_NAME='seating_assignments' THEN
     IF NOT EXISTS(SELECT 1 FROM seating_tables x WHERE x.id=NEW.table_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding seating table reference'; END IF;
@@ -343,7 +343,7 @@ BEGIN
     IF NEW.event_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM wedding_events x WHERE x.id=NEW.event_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding RSVP event reference'; END IF;
   END IF;
   RETURN NEW;
-END;$;
+END;$$;
 
 DROP TRIGGER IF EXISTS trg_tenant_seating ON seating_assignments;
 CREATE TRIGGER trg_tenant_seating BEFORE INSERT OR UPDATE ON seating_assignments FOR EACH ROW EXECUTE FUNCTION enforce_same_wedding_references();
