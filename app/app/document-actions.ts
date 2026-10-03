@@ -2,11 +2,11 @@
 
 import { DeleteObjectCommand,HeadObjectCommand } from "@aws-sdk/client-s3";
 import { revalidatePath } from "next/cache";
-import { requireWorkspace } from "@/lib/workspace";
+import { requireEditor } from "@/lib/workspace";
 import { ALLOWED_FILE_TYPES,MAX_FILE_BYTES,MAX_WORKSPACE_BYTES,STORAGE_BUCKET,storageClient } from "@/lib/storage";
 
 export async function registerDocument(input:{objectKey:string;name:string;contentType:string;size:number;category:string}){
-  const {db,session,wedding}=await requireWorkspace();
+  const {db,session,wedding}=await requireEditor();
   const objectKey=String(input.objectKey||""),name=String(input.name||"").slice(0,180),type=String(input.contentType||""),size=Number(input.size||0),category=String(input.category||"other").slice(0,40);
   if(!objectKey.startsWith(`weddings/${wedding.id}/`)||!name||!ALLOWED_FILE_TYPES.has(type)||size<=0||size>MAX_FILE_BYTES) throw new Error("Invalid document");
   const [usage]=await db`SELECT coalesce(sum(size_bytes),0)::bigint used FROM documents WHERE wedding_id=${wedding.id}`;
@@ -19,7 +19,7 @@ export async function registerDocument(input:{objectKey:string;name:string;conte
 }
 
 export async function deleteDocument(formData:FormData){
-  const {db,wedding}=await requireWorkspace();
+  const {db,wedding}=await requireEditor();
   const id=String(formData.get("id")||"");
   const rows=await db`SELECT object_key FROM documents WHERE id=${id} AND wedding_id=${wedding.id} LIMIT 1`;
   if(!rows[0]) return;
