@@ -1,6 +1,7 @@
 "use server";
 
 import crypto from "node:crypto";
+import { cookies } from "next/headers";
 import { auth } from "@/lib/auth/server";
 import { sql } from "@/lib/db";
 import { redirect } from "next/navigation";
