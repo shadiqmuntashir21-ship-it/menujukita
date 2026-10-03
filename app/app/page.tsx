@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { CalendarClock, CircleDollarSign, Home, ListChecks, Store, UsersRound } from "lucide-react";
+import { CalendarClock, CircleDollarSign, FileText, Home, ListChecks, Store, UsersRound } from "lucide-react";
 import { requireWorkspace } from "@/lib/workspace";
 import HomeSection from "@/components/live/home-section";
 import PlanSection from "@/components/live/plan-section";
 import MoneySection from "@/components/live/money-section";
 import GuestsSection from "@/components/live/guests-section";
 import VendorsSection from "@/components/live/vendors-section";
+import DocumentsSection from "@/components/live/documents-section";
 
 export const dynamic="force-dynamic";
 
@@ -14,13 +15,14 @@ const diffDays=(v:any)=>{if(!v)return 9999;const d=new Date(v);return Math.ceil(
 
 export default async function Page(){
   const {db,wedding}=await requireWorkspace();
-  const [tasks,vendors,budgetItems,paymentsRaw,guests,rundown]=await Promise.all([
+  const [tasks,vendors,budgetItems,paymentsRaw,guests,rundown,documents]=await Promise.all([
     db`SELECT * FROM tasks WHERE wedding_id=${wedding.id} ORDER BY (status='done') ASC,due_date NULLS LAST,sort_order,created_at`,
     db`SELECT * FROM vendors WHERE wedding_id=${wedding.id} ORDER BY CASE status WHEN 'booked' THEN 1 WHEN 'negotiating' THEN 2 WHEN 'shortlisted' THEN 3 ELSE 4 END,created_at DESC`,
     db`SELECT * FROM budget_items WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`,
     db`SELECT p.*,CASE WHEN p.status='upcoming' AND p.due_date<CURRENT_DATE THEN 'overdue' ELSE p.status END AS display_status FROM payments p WHERE wedding_id=${wedding.id} ORDER BY (p.status='paid') ASC,p.due_date NULLS LAST,p.created_at DESC`,
     db`SELECT * FROM guests WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`,
-    db`SELECT * FROM rundown_items WHERE wedding_id=${wedding.id} ORDER BY starts_at,sort_order`
+    db`SELECT * FROM rundown_items WHERE wedding_id=${wedding.id} ORDER BY starts_at,sort_order`,
+    db`SELECT * FROM documents WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`
   ]);
 
   const payments=(paymentsRaw as any[]).map(p=>({...p,status:p.display_status||p.status}));
@@ -39,6 +41,7 @@ export default async function Page(){
   const bookedVendors=vendors.filter((v:any)=>["booked","completed"].includes(v.status)).length;
   const confirmedPax=guests.filter((g:any)=>g.rsvp_status==="attending").reduce((s:any,g:any)=>s+n(g.actual_pax||g.expected_pax||1),0);
   const overduePayments=payments.filter((p:any)=>p.status==="overdue").length;
+  const usedDocumentBytes=(documents as any[]).reduce((s,d)=>s+n(d.size_bytes),0);
 
   const taskScore=total?done/total*100:70;
   const budgetTotal=n(wedding.budget_total);
@@ -76,6 +79,7 @@ export default async function Page(){
         <a className="side-link" href="#money"><CircleDollarSign size={18}/>Money</a>
         <a className="side-link" href="#guests"><UsersRound size={18}/>Guests</a>
         <a className="side-link" href="#vendors"><Store size={18}/>Vendor</a>
+        <a className="side-link" href="#documents"><FileText size={18}/>Documents</a>
         <Link className="side-link" href="/app/day-h"><CalendarClock size={18}/>Day-H Mode</Link>
       </div>
     </aside>
@@ -86,6 +90,7 @@ export default async function Page(){
       <MoneySection wedding={wedding} metrics={metrics} budgetItems={budgetItems as any[]} payments={payments}/>
       <GuestsSection guests={guests as any[]} wedding={wedding}/>
       <VendorsSection vendors={vendors as any[]}/>
+      <DocumentsSection documents={documents as any[]} usedBytes={usedDocumentBytes}/>
     </main>
     <nav className="mobile-nav live-mobile-nav">
       <a href="#home"><Home size={18}/><small>Home</small></a>
