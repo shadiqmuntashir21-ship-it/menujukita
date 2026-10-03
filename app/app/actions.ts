@@ -68,8 +68,9 @@ export async function deleteVendor(f:FormData){
 
 export async function addBudgetItem(f:FormData){
   const{db,wedding,session}=await requireBudgetAccess();const name=text(f,"name");if(!name)return;
-  const rows=await db`INSERT INTO budget_items(wedding_id,name,planned_amount,actual_amount,paid_amount,due_date,notes)
-    VALUES(${wedding.id},${name},${num(f,"planned_amount")},${num(f,"actual_amount")},${num(f,"paid_amount")},${text(f,"due_date")||null},${text(f,"notes")||null}) RETURNING id`;
+  const vendorId=text(f,"vendor_id")||null;
+  const rows=await db`INSERT INTO budget_items(wedding_id,vendor_id,name,planned_amount,actual_amount,paid_amount,due_date,notes)
+    VALUES(${wedding.id},${vendorId},${name},${num(f,"planned_amount")},${num(f,"actual_amount")},${num(f,"paid_amount")},${text(f,"due_date")||null},${text(f,"notes")||null}) RETURNING id`;
   await recordActivity(db,wedding.id,session.user.id,"budget_item_created","budget",String(rows[0]?.id||""),{name});
   revalidatePath("/app");
 }
