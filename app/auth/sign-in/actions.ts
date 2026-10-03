@@ -1,0 +1,1 @@
+"use server";import{auth}from"@/lib/auth/server";import{redirect}from"next/navigation";export async function signIn(_:{error:string}|null,f:FormData){const{error}=await auth.signIn.email({email:String(f.get("email")||""),password:String(f.get("password")||"")});if(error)return{error:error.message||"Gagal masuk"};redirect("/app")}
