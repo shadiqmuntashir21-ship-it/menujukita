@@ -35,6 +35,7 @@ export async function submitRsvp(partyId:string,signature:string,f:FormData){
   const dietary=String(f.get("dietary_note")||"").trim().slice(0,500);
   const selectedEvents=new Set(f.getAll("events").map(String));
   const events=await db`SELECT id FROM wedding_events WHERE wedding_id=${party.wedding_id}`;
+  if(status==="attending"&&events.length>0&&selectedEvents.size===0)redirect("/rsvp/"+partyId+"/"+signature+"?error=event");
   const tx:any[]=[
     db`UPDATE guests SET rsvp_status=${status},actual_pax=${actual},dietary_note=${dietary||null},updated_at=now()
        WHERE party_id=${partyId} AND wedding_id=${party.wedding_id}`
