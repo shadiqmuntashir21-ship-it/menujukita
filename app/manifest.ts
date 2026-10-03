@@ -1,0 +1,1 @@
+import type{MetadataRoute}from"next";export default function manifest():MetadataRoute.Manifest{return{name:"MenujuKita",short_name:"MenujuKita",description:"Plan the journey. Enjoy the day.",start_url:"/",display:"standalone",background_color:"#FAF8F4",theme_color:"#535E57",icons:[{src:"/icon.svg",sizes:"any",type:"image/svg+xml",purpose:"any"}]}}
