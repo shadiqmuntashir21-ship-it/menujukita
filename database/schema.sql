@@ -307,6 +307,12 @@ CREATE INDEX IF NOT EXISTS idx_rsvps_wedding_event ON rsvps(wedding_id,event_id)
 CREATE INDEX IF NOT EXISTS idx_rundown_wedding_time ON rundown_items(wedding_id,starts_at);
 CREATE INDEX IF NOT EXISTS idx_activity_wedding_created ON activity_logs(wedding_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(auth_user_id,read_at);
+CREATE INDEX IF NOT EXISTS idx_documents_wedding_created ON documents(wedding_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_seating_tables_wedding_event ON seating_tables(wedding_id,event_id);
+CREATE INDEX IF NOT EXISTS idx_seating_assignments_wedding_table ON seating_assignments(wedding_id,table_id);
+CREATE INDEX IF NOT EXISTS idx_wedding_events_wedding_date ON wedding_events(wedding_id,event_date,sort_order);
+CREATE INDEX IF NOT EXISTS idx_licenses_status_wedding ON licenses(status,wedding_id);
+CREATE INDEX IF NOT EXISTS idx_member_invites_token_status ON member_invites(token_hash,status,expires_at);
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_active_owner_per_wedding ON wedding_members(wedding_id) WHERE role='owner' AND status='active';
 
