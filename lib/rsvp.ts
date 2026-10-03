@@ -1,8 +1,8 @@
 import crypto from "node:crypto";
 
 function secret() {
-  const value = process.env.NEON_AUTH_COOKIE_SECRET;
-  if (!value) throw new Error("NEON_AUTH_COOKIE_SECRET belum dikonfigurasi");
+  const value = process.env.RSVP_SIGNING_SECRET;
+  if (!value || value.length < 32) throw new Error("RSVP_SIGNING_SECRET belum dikonfigurasi dengan aman");
   return value;
 }
 
