@@ -308,6 +308,50 @@ CREATE INDEX IF NOT EXISTS idx_rundown_wedding_time ON rundown_items(wedding_id,
 CREATE INDEX IF NOT EXISTS idx_activity_wedding_created ON activity_logs(wedding_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(auth_user_id,read_at);
 
+CREATE UNIQUE INDEX IF NOT EXISTS uq_active_owner_per_wedding ON wedding_members(wedding_id) WHERE role='owner' AND status='active';
+
+CREATE OR REPLACE FUNCTION enforce_same_wedding_references()
+RETURNS trigger LANGUAGE plpgsql AS $
+BEGIN
+  IF TG_TABLE_NAME='seating_assignments' THEN
+    IF NOT EXISTS(SELECT 1 FROM seating_tables x WHERE x.id=NEW.table_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding seating table reference'; END IF;
+    IF NOT EXISTS(SELECT 1 FROM guests x WHERE x.id=NEW.guest_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding seating guest reference'; END IF;
+  ELSIF TG_TABLE_NAME='payments' THEN
+    IF NEW.vendor_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM vendors x WHERE x.id=NEW.vendor_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding payment vendor reference'; END IF;
+    IF NEW.budget_item_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM budget_items x WHERE x.id=NEW.budget_item_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding payment budget reference'; END IF;
+  ELSIF TG_TABLE_NAME='documents' THEN
+    IF NEW.vendor_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM vendors x WHERE x.id=NEW.vendor_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding document vendor reference'; END IF;
+    IF NEW.payment_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM payments x WHERE x.id=NEW.payment_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding document payment reference'; END IF;
+  ELSIF TG_TABLE_NAME='rundown_items' THEN
+    IF NEW.event_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM wedding_events x WHERE x.id=NEW.event_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding rundown event reference'; END IF;
+    IF NEW.pic_member_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM wedding_members x WHERE x.id=NEW.pic_member_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding rundown member reference'; END IF;
+    IF NEW.vendor_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM vendors x WHERE x.id=NEW.vendor_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding rundown vendor reference'; END IF;
+  ELSIF TG_TABLE_NAME='tasks' THEN
+    IF NEW.event_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM wedding_events x WHERE x.id=NEW.event_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding task event reference'; END IF;
+    IF NEW.assignee_member_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM wedding_members x WHERE x.id=NEW.assignee_member_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding task member reference'; END IF;
+    IF NEW.related_vendor_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM vendors x WHERE x.id=NEW.related_vendor_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding task vendor reference'; END IF;
+    IF NEW.related_budget_item_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM budget_items x WHERE x.id=NEW.related_budget_item_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding task budget reference'; END IF;
+  ELSIF TG_TABLE_NAME='rsvps' THEN
+    IF NEW.guest_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM guests x WHERE x.id=NEW.guest_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding RSVP guest reference'; END IF;
+    IF NEW.party_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM guest_parties x WHERE x.id=NEW.party_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding RSVP party reference'; END IF;
+    IF NEW.event_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM wedding_events x WHERE x.id=NEW.event_id AND x.wedding_id=NEW.wedding_id) THEN RAISE EXCEPTION 'Cross-wedding RSVP event reference'; END IF;
+  END IF;
+  RETURN NEW;
+END;$;
+
+DROP TRIGGER IF EXISTS trg_tenant_seating ON seating_assignments;
+CREATE TRIGGER trg_tenant_seating BEFORE INSERT OR UPDATE ON seating_assignments FOR EACH ROW EXECUTE FUNCTION enforce_same_wedding_references();
+DROP TRIGGER IF EXISTS trg_tenant_payments ON payments;
+CREATE TRIGGER trg_tenant_payments BEFORE INSERT OR UPDATE ON payments FOR EACH ROW EXECUTE FUNCTION enforce_same_wedding_references();
+DROP TRIGGER IF EXISTS trg_tenant_documents ON documents;
+CREATE TRIGGER trg_tenant_documents BEFORE INSERT OR UPDATE ON documents FOR EACH ROW EXECUTE FUNCTION enforce_same_wedding_references();
+DROP TRIGGER IF EXISTS trg_tenant_rundown ON rundown_items;
+CREATE TRIGGER trg_tenant_rundown BEFORE INSERT OR UPDATE ON rundown_items FOR EACH ROW EXECUTE FUNCTION enforce_same_wedding_references();
+DROP TRIGGER IF EXISTS trg_tenant_tasks ON tasks;
+CREATE TRIGGER trg_tenant_tasks BEFORE INSERT OR UPDATE ON tasks FOR EACH ROW EXECUTE FUNCTION enforce_same_wedding_references();
+DROP TRIGGER IF EXISTS trg_tenant_rsvps ON rsvps;
+CREATE TRIGGER trg_tenant_rsvps BEFORE INSERT OR UPDATE ON rsvps FOR EACH ROW EXECUTE FUNCTION enforce_same_wedding_references();
+
 CREATE OR REPLACE FUNCTION enforce_active_license_limit()
 RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE max_allowed integer; active_count integer;
