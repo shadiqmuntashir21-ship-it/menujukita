@@ -1,0 +1,1 @@
+.document-upload{display:grid;grid-template-columns:1fr 180px auto;gap:10px;align-items:center}.document-list{margin-top:16px}@media(max-width:800px){.document-upload{grid-template-columns:1fr}.document-upload .btn{width:100%}}
