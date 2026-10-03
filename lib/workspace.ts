@@ -36,10 +36,18 @@ export async function requireWorkspace() {
   redirect("/onboarding");
 }
 
+export function canViewBudget(wedding:any){
+  return ["owner","partner"].includes(String(wedding.role)) || Boolean(wedding.can_view_budget);
+}
+
+export async function requireEditor(){
+  const ctx=await requireWorkspace();
+  if(!["owner","partner","collaborator"].includes(String(ctx.wedding.role))) throw new Error("Read-only workspace");
+  return ctx;
+}
+
 export async function requireBudgetAccess() {
-  const ctx = await requireWorkspace();
-  if (!ctx.wedding.can_view_budget && ctx.wedding.role !== "owner" && ctx.wedding.role !== "partner") {
-    throw new Error("Budget access denied");
-  }
+  const ctx = await requireEditor();
+  if (!canViewBudget(ctx.wedding)) throw new Error("Budget access denied");
   return ctx;
 }
