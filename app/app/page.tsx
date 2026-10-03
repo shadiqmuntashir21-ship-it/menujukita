@@ -31,7 +31,7 @@ export default async function Page(){
     canBudget?db`SELECT b.*,v.name vendor_name FROM budget_items b LEFT JOIN vendors v ON v.id=b.vendor_id WHERE b.wedding_id=${wedding.id} ORDER BY b.created_at DESC`:Promise.resolve([]),
     canBudget?db`SELECT p.*,v.name vendor_name,CASE WHEN p.status='upcoming' AND p.due_date<CURRENT_DATE THEN 'overdue' ELSE p.status END AS display_status FROM payments p LEFT JOIN vendors v ON v.id=p.vendor_id WHERE p.wedding_id=${wedding.id} ORDER BY (p.status='paid') ASC,p.due_date NULLS LAST,p.created_at DESC`:Promise.resolve([]),
     db`SELECT * FROM guests WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`,
-    db`SELECT * FROM rundown_items WHERE wedding_id=${wedding.id} ORDER BY starts_at,sort_order`,
+    db`SELECT r.*,m.display_name pic_name,v.name vendor_name FROM rundown_items r LEFT JOIN wedding_members m ON m.id=r.pic_member_id LEFT JOIN vendors v ON v.id=r.vendor_id WHERE r.wedding_id=${wedding.id} ORDER BY r.starts_at,r.sort_order`,
     canBudget?db`SELECT * FROM documents WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`:db`SELECT * FROM documents WHERE wedding_id=${wedding.id} AND category NOT IN ('invoice','receipt') ORDER BY created_at DESC`,
     db`SELECT id,display_name,invited_email,role,can_view_budget,status,joined_at FROM wedding_members WHERE wedding_id=${wedding.id} AND status<>'revoked' ORDER BY CASE role WHEN 'owner' THEN 0 WHEN 'partner' THEN 1 WHEN 'collaborator' THEN 2 ELSE 3 END,created_at`,
     canManageTeam?db`SELECT id,invited_email,role,can_view_budget,status,expires_at,created_at FROM member_invites WHERE wedding_id=${wedding.id} AND status='pending' AND expires_at>now() ORDER BY created_at DESC`:Promise.resolve([]),
@@ -128,7 +128,7 @@ export default async function Page(){
         <div className="topline-actions"><WorkspaceSwitcher items={workspaces as any[]} activeId={String(wedding.id)}/><span className="badge">{canEdit?"Can edit":"Read only"} · Neon</span></div>
       </div>
       <HomeSection wedding={wedding} metrics={metrics} priorities={priorities} payments={payments} canBudget={canBudget}/>
-      <PlanSection tasks={tasks as any[]} rundown={rundown as any[]} members={members as any[]} canEdit={canEdit}/>
+      <PlanSection tasks={tasks as any[]} rundown={rundown as any[]} members={members as any[]} vendors={vendors as any[]} canEdit={canEdit}/>
       {canBudget&&<MoneySection wedding={wedding} metrics={metrics} budgetItems={budgetItems as any[]} payments={payments} vendors={vendors as any[]} canEdit={canEdit}/>}
       <GuestsSection guests={guests as any[]} wedding={wedding} canEdit={canEdit}/>
       <SeatingSection tables={seatingTables as any[]} assignments={seatingAssignments as any[]} guests={guests as any[]} events={events as any[]} canEdit={canEdit}/>
