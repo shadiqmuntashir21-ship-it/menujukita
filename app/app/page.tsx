@@ -66,7 +66,7 @@ export default async function Page(){
   const paid=payments.length?paymentPaid:budgetPaid;
   const committed=payments.filter((p:any)=>p.status!=="paid"&&p.status!=="cancelled").reduce((s:any,p:any)=>s+n(p.amount),0);
   const moneyBase=canBudget?(n(wedding.available_funds)>0?n(wedding.available_funds):n(wedding.budget_total)):0;
-  const safeToSpend=canBudget?Math.max(0,moneyBase-committed-n(wedding.reserve_buffer)):0;
+  const safeToSpend=canBudget?Math.max(0,moneyBase-paid-committed-n(wedding.reserve_buffer)):0;
   const bookedVendors=vendors.filter((v:any)=>["booked","completed"].includes(v.status)).length;
   const confirmedPax=guests.filter((g:any)=>g.rsvp_status==="attending").reduce((s:any,g:any)=>s+n(g.actual_pax||g.expected_pax||1),0);
   const overduePayments=payments.filter((p:any)=>p.status==="overdue").length;
