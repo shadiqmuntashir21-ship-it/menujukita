@@ -10,6 +10,7 @@ import DocumentsSection from "@/components/live/documents-section";
 import MembersSection from "@/components/live/members-section";
 import SeatingSection from "@/components/live/seating-section";
 import ActivitySection from "@/components/live/activity-section";
+import WorkspaceSwitcher from "@/components/live/workspace-switcher";
 
 export const dynamic="force-dynamic";
 
@@ -17,12 +18,12 @@ const n=(v:any)=>Number(v||0);
 const diffDays=(v:any)=>{if(!v)return 9999;const d=new Date(v);return Math.ceil((d.getTime()-Date.now())/86400000)};
 
 export default async function Page(){
-  const {db,wedding}=await requireWorkspace();
+  const {db,wedding,session}=await requireWorkspace();
   const canBudget=canViewBudget(wedding);
   const canEdit=String(wedding.role)!=="viewer";
   const canManageTeam=["owner","partner"].includes(String(wedding.role));
 
-  const [tasks,vendors,budgetItems,paymentsRaw,guests,rundown,documents,members,invites,events,seatingTables,seatingAssignments,activity]=await Promise.all([
+  const [tasks,vendors,budgetItems,paymentsRaw,guests,rundown,documents,members,invites,events,seatingTables,seatingAssignments,activity,workspaces]=await Promise.all([
     db`SELECT * FROM tasks WHERE wedding_id=${wedding.id} ORDER BY (status='done') ASC,due_date NULLS LAST,sort_order,created_at`,
     db`SELECT * FROM vendors WHERE wedding_id=${wedding.id} ORDER BY CASE status WHEN 'booked' THEN 1 WHEN 'negotiating' THEN 2 WHEN 'shortlisted' THEN 3 ELSE 4 END,created_at DESC`,
     canBudget?db`SELECT * FROM budget_items WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`:Promise.resolve([]),
@@ -39,7 +40,14 @@ export default async function Page(){
        FROM activity_logs a
        LEFT JOIN wedding_members m ON m.wedding_id=a.wedding_id AND m.auth_user_id=a.auth_user_id
        WHERE a.wedding_id=${wedding.id}
-       ORDER BY a.created_at DESC LIMIT 30`
+       ORDER BY a.created_at DESC LIMIT 30`,
+    db`SELECT w.id,w.couple_one_name,w.couple_two_name,m.role
+       FROM weddings w
+       JOIN wedding_members m ON m.wedding_id=w.id
+       JOIN licenses l ON l.wedding_id=w.id
+       WHERE m.auth_user_id=${session.user.id}
+         AND m.status='active' AND w.status='active' AND l.status='active'
+       ORDER BY CASE m.role WHEN 'owner' THEN 0 WHEN 'partner' THEN 1 WHEN 'collaborator' THEN 2 ELSE 3 END,w.created_at DESC`
   ]);
 
   const payments=(paymentsRaw as any[]).map(p=>({...p,status:p.display_status||p.status}));
@@ -104,7 +112,10 @@ export default async function Page(){
       </div>
     </aside>
     <main className="main live-main">
-      <div className="topline"><div><small className="muted">LIVE WEDDING · {String(wedding.role).toUpperCase()}</small><h2 style={{margin:"4px 0 0"}}>{wedding.couple_one_name} & {wedding.couple_two_name}</h2></div><span className="badge">{canEdit?"Can edit":"Read only"} · Neon</span></div>
+      <div className="topline">
+        <div><small className="muted">LIVE WEDDING · {String(wedding.role).toUpperCase()}</small><h2 style={{margin:"4px 0 0"}}>{wedding.couple_one_name} & {wedding.couple_two_name}</h2></div>
+        <div className="topline-actions"><WorkspaceSwitcher items={workspaces as any[]} activeId={String(wedding.id)}/><span className="badge">{canEdit?"Can edit":"Read only"} · Neon</span></div>
+      </div>
       <HomeSection wedding={wedding} metrics={metrics} priorities={priorities} payments={payments} canBudget={canBudget}/>
       <PlanSection tasks={tasks as any[]} rundown={rundown as any[]} canEdit={canEdit}/>
       {canBudget&&<MoneySection wedding={wedding} metrics={metrics} budgetItems={budgetItems as any[]} payments={payments} canEdit={canEdit}/>}
