@@ -13,12 +13,6 @@ jobs:
     timeout-minutes: 20
     env:
       DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
-      RSVP_SIGNING_SECRET: ci-placeholder-rsvp-signing-secret-at-least-32-characters
-      AWS_ACCESS_KEY_ID: ci-placeholder
-      AWS_SECRET_ACCESS_KEY: ci-placeholder
-      AWS_ENDPOINT_URL_S3: https://example.com
-      AWS_REGION: us-east-2
-      NEON_STORAGE_BUCKET: menujukita-private
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,8 +25,7 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Typecheck
         run: npx tsc --noEmit
-      - name: Build without runtime secrets
-        run: |
-          env -u DATABASE_URL               -u RSVP_SIGNING_SECRET               -u AWS_ACCESS_KEY_ID               -u AWS_SECRET_ACCESS_KEY               -u AWS_ENDPOINT_URL_S3               -u AWS_REGION               -u NEON_STORAGE_BUCKET               npm run build
-      - name: Production-parity build with configured environment
+      - name: Build without runtime database
+        run: env -u DATABASE_URL npm run build
+      - name: Production-parity build
         run: npm run build

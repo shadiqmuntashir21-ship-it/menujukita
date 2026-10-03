@@ -1,18 +1,30 @@
-import { S3Client } from "@aws-sdk/client-s3";
+import { getStorageInternalSecret } from "@/lib/runtime-secrets";
 
-export const STORAGE_BUCKET=process.env.NEON_STORAGE_BUCKET||"menujukita-private";
 export const MAX_FILE_BYTES=5*1024*1024;
 export const MAX_WORKSPACE_BYTES=15*1024*1024;
 export const ALLOWED_FILE_TYPES=new Set(["application/pdf","image/jpeg","image/png","image/webp"]);
+export const STORAGE_BRIDGE_URL=process.env.STORAGE_BRIDGE_URL||"https://br-bitter-waterfall-b5jea6qo-storagebridge.compute.c-7.us-east-2.aws.neon.tech/";
 
-export function storageClient(){
-  const endpoint=process.env.AWS_ENDPOINT_URL_S3;
-  const region=process.env.AWS_REGION;
-  const accessKeyId=process.env.AWS_ACCESS_KEY_ID;
-  const secretAccessKey=process.env.AWS_SECRET_ACCESS_KEY;
-  if(!endpoint||!region||!accessKeyId||!secretAccessKey) throw new Error("Neon Object Storage environment belum lengkap");
-  return new S3Client({
-    endpoint,region,forcePathStyle:true,
-    credentials:{accessKeyId,secretAccessKey}
+async function bridge(op:string,key:string){
+  const secret=await getStorageInternalSecret();
+  const res=await fetch(STORAGE_BRIDGE_URL,{
+    method:"POST",
+    headers:{"content-type":"application/json","authorization":`Bearer ${secret}`},
+    body:JSON.stringify({op,key}),
+    cache:"no-store"
   });
+  const data=await res.json().catch(()=>({})) as any;
+  if(!res.ok)throw new Error(data?.error||`Storage bridge error ${res.status}`);
+  return data;
+}
+
+export async function presignStorageUpload(key:string){return String((await bridge("presign-upload",key)).url||"")}
+export async function presignStorageDownload(key:string){return String((await bridge("presign-download",key)).url||"")}
+export async function headStorageObject(key:string){return Number((await bridge("head",key)).size||0)}
+export async function deleteStorageObject(key:string){await bridge("delete",key)}
+
+export async function storageBridgeHealth(){
+  const res=await fetch(new URL("/health",STORAGE_BRIDGE_URL),{cache:"no-store"});
+  const data=await res.json().catch(()=>({})) as any;
+  return{ok:res.ok&&Boolean(data?.ok),storageEnv:Boolean(data?.storageEnv),database:Boolean(data?.database)};
 }

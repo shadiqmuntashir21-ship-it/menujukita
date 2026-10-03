@@ -1,84 +1,81 @@
 # MenujuKita — Final Production Readiness
 
-Status: **FINAL QA — NO ACTUAL PRODUCTION DEPLOY YET**
+Status: **FINAL CI GATE — ACTUAL VERCEL DEPLOY BELUM DIBUKA**
 
-## Product Baseline
-- Promo pilot: **Rp49.000 / wedding**
-- Max **250 active wedding licenses**
-- 1 lisensi = 1 Wedding Workspace
-- Customer auth: **Kode Lisensi + PIN**, tanpa email/password
-- Demo: local browser only, tidak memakai Neon/license
-- Admin: separate Super Admin PIN
-- UI: Wedding Studio view-based shell + mobile bottom navigation
-- Day-H: separate focus mode
+## Product
+- Rp49.000 / wedding
+- max 250 active wedding licenses
+- 1 license = 1 Wedding Workspace
+- Kode Lisensi + PIN
+- local Demo Pro
+- Wedding Studio + Day-H Mode
 
-## Auth & Security Gate
-- Kode Lisensi disimpan hash-only
-- PIN customer memakai random salt + scrypt
-- PIN Super Admin memakai random salt + scrypt dan di-seed privat ke app_settings
-- Customer/admin login rate limited
-- Session token random 256-bit; database hanya menyimpan token hash
-- Force logout dan reset PIN merevoke session lama
-- Access audit log aktif
-- Public RSVP HMAC signing tetap terpisah
-- Suspended/revoked license tidak dapat masuk workspace
-- Cross-wedding database triggers tetap aktif
-- Private file signed URL tetap aktif
-
-## Isolated Neon QA
-Dev branch: dev-license-pin-studio-20261003
-Branch expires automatically on 2026-10-04T15:00:00Z.
+## Production Backend
+Neon project: `steep-forest-69917879`
+Production branch: `br-bitter-waterfall-b5jea6qo`
 
 Verified:
-1. license pin_salt tersedia
-2. license session dapat dibuat
-3. license session dapat direvoke
-4. admin session table tersedia
-5. access log table tersedia
-6. Super Admin hash + salt dapat disimpan
-7. production branch belum menerima QA records
+- 250 active-wedding cap tetap aktif
+- 0 active license
+- 3 unused license existing
+- 0 active wedding
+- customer/admin session tables tersedia
+- access audit table tersedia
+- Super Admin PIN hash+salt tersedia
+- runtime `app_secrets` tersedia
+- `rsvp_signing_secret` digenerate server-side
+- `storage_internal_secret` digenerate server-side
+- private bucket `menujukita-private` tersedia
+- production Neon Function `storagebridge` deployment completed
 
-## Vercel Deployment Guard
-Repo sebelumnya terhubung ke 3 project Vercel.
-Canonical project:
-- name: menujukita
-- ID: prj_rp05XZ24A3tOZSw1dQmJUF5bQ4AO
+Rollback snapshot existing:
+- `pre-menujukita-license-pin-final-20261003`
 
-Duplicates yang harus tetap skip:
-- menujukita-da4n
-- menujukita-1xop
+## Storage Architecture
+Vercel tidak memerlukan AWS/Neon storage credential.
 
-CI-only commits memakai:
-- vercel.json ignoreCommand = exit 0
+Flow:
+1. Vercel server authenticates wedding/session using DATABASE_URL.
+2. Vercel reads internal storage secret from server-only `app_secrets`.
+3. Vercel calls Neon Function `storagebridge`.
+4. Neon Function receives branch Object Storage credentials automatically.
+5. Function creates presigned URL / HEAD / DELETE operation.
+6. Credential never reaches browser, GitHub, or Vercel project environment.
 
-Final deploy commit memakai condition berbasis VERCEL_PROJECT_ID:
-- duplicates → exit 0 / ignored
-- canonical menujukita → exit 1 / build
+## Canonical Vercel Project
+Use only:
+- name: `menujukita-da4n`
+- project ID: `prj_ozb4CSrWCVsRIFAqA39uQi4UbGqS`
+- team: `shadiq`
 
-Dengan demikian actual Vercel production build tetap **satu kali**.
+The existing project already exposes DATABASE_URL.
 
-## Production Environment Required
-- DATABASE_URL
-- RSVP_SIGNING_SECRET
-- AWS_ACCESS_KEY_ID
-- AWS_SECRET_ACCESS_KEY
-- AWS_ENDPOINT_URL_S3
-- AWS_REGION
-- NEON_STORAGE_BUCKET
+Duplicates that must remain ignored:
+- `menujukita`
+- `menujukita-1xop`
 
-Neon Auth variables tidak lagi dibutuhkan untuk customer login.
+## Deployment Guard
+During CI:
+```json
+{"ignoreCommand":"exit 0"}
+```
 
-## Final Deployment Sequence
-1. Push CI-only commit dengan semua Vercel build di-skip.
-2. Pastikan GitHub CI npm ci + tsc + next build hijau.
-3. Apply migration auth/session ke production Neon.
-4. Seed Super Admin PIN secara privat ke production DB.
-5. Verifikasi production schema + 250-cap trigger.
-6. Ubah Vercel ignoreCommand agar hanya canonical project boleh build.
-7. Push final deploy commit.
-8. Pastikan hanya canonical project membuat actual deployment.
-9. Smoke test landing, Demo Pro, PWA, login, setup, Wedding Studio, CRUD, RSVP, seating, Vault, Day-H, Admin, support mode.
-10. Scan Vercel build/runtime logs.
+Final deploy commit will allow builds only when:
+`VERCEL_PROJECT_ID=prj_ozb4CSrWCVsRIFAqA39uQi4UbGqS`
 
-## Deployment Rule
-**Tidak ada actual deploy berulang selama development. Hanya satu actual production deployment di akhir.**
+Therefore only one actual Vercel build is permitted.
+
+## Final Sequence
+1. Push storage/runtime-secret refactor while all Vercel builds are ignored.
+2. GitHub CI must pass npm ci, TypeScript, and Next.js builds.
+3. Verify production Neon state again.
+4. Change only `vercel.json` to allow canonical project.
+5. Push one final deploy commit.
+6. Confirm duplicate projects show Ignored Build Step.
+7. Confirm canonical deployment reaches READY.
+8. Verify new `/api/health` = HTTP 200.
+9. Smoke test landing, Demo Pro, auth, admin, workspace routes and PWA endpoints.
+10. Scan build/runtime errors.
+
+## Rule
+**Only one actual Vercel production build/deployment is allowed at the end.**

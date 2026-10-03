@@ -1,3 +1,19 @@
-const keys={database:"DATABASE_URL",rsvp:"RSVP_SIGNING_SECRET",storageKey:"AWS_ACCESS_KEY_ID",storageSecret:"AWS_SECRET_ACCESS_KEY",storageEndpoint:"AWS_ENDPOINT_URL_S3",storageRegion:"AWS_REGION",storageBucket:"NEON_STORAGE_BUCKET"} as const;
+import { sql } from "@/lib/db";
+import { storageBridgeHealth } from "@/lib/storage";
+
 export const dynamic="force-dynamic";
-export async function GET(){const checks=Object.fromEntries(Object.entries(keys).map(([name,key])=>[name,Boolean(process.env[key])]));const coreReady=Boolean(checks.database&&checks.rsvp);return Response.json({ok:true,coreReady,storageReady:Boolean(checks.storageKey&&checks.storageSecret&&checks.storageEndpoint&&checks.storageRegion&&checks.storageBucket),checks},{status:coreReady?200:503})}
+
+export async function GET(){
+  if(!process.env.DATABASE_URL)return Response.json({ok:false,checks:{database:false}},{status:503});
+  try{
+    const db=sql();
+    const rows=await db`SELECT secret_key FROM app_secrets WHERE secret_key IN ('rsvp_signing_secret','storage_internal_secret')`;
+    const keys=new Set((rows as any[]).map(r=>String(r.secret_key)));
+    const bridge=await storageBridgeHealth().catch(()=>({ok:false,storageEnv:false,database:false}));
+    const checks={database:true,rsvpSecret:keys.has("rsvp_signing_secret"),storageSecret:keys.has("storage_internal_secret"),storageBridge:bridge.ok&&bridge.storageEnv};
+    const ready=Object.values(checks).every(Boolean);
+    return Response.json({ok:ready,checks,bridge:{storageEnv:bridge.storageEnv,database:bridge.database}},{status:ready?200:503});
+  }catch(error){
+    return Response.json({ok:false,checks:{database:false},error:"backend_unavailable"},{status:503});
+  }
+}

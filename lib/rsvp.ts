@@ -1,18 +1,13 @@
 import crypto from "node:crypto";
+import { getRsvpSigningSecret } from "@/lib/runtime-secrets";
 
-function secret() {
-  const value = process.env.RSVP_SIGNING_SECRET;
-  if (!value || value.length < 32) throw new Error("RSVP_SIGNING_SECRET belum dikonfigurasi dengan aman");
-  return value;
+export async function signRsvpParty(partyId:string){
+  const secret=await getRsvpSigningSecret();
+  return crypto.createHmac("sha256",secret).update(partyId).digest("hex").slice(0,32);
 }
 
-export function signRsvpParty(partyId: string) {
-  return crypto.createHmac("sha256", secret()).update(partyId).digest("hex").slice(0, 32);
-}
-
-export function verifyRsvpParty(partyId: string, signature: string) {
-  const expected = signRsvpParty(partyId);
-  const a = Buffer.from(expected);
-  const b = Buffer.from(signature || "");
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+export async function verifyRsvpParty(partyId:string,signature:string){
+  const expected=await signRsvpParty(partyId);
+  const a=Buffer.from(expected),b=Buffer.from(signature||"");
+  return a.length===b.length&&crypto.timingSafeEqual(a,b);
 }
