@@ -9,12 +9,13 @@ export async function POST(req:Request){
   const {data:session}=await auth.getSession();
   if(!session?.user) return Response.json({error:"unauthorized"},{status:401});
   const db=sql();
-  const rows=await db`SELECT w.id FROM weddings w
+  const rows=await db`SELECT w.id,m.role FROM weddings w
     JOIN wedding_members m ON m.wedding_id=w.id
     JOIN licenses l ON l.wedding_id=w.id
     WHERE m.auth_user_id=${session.user.id} AND m.status='active' AND w.status='active' AND l.status='active'
     LIMIT 1`;
   if(!rows[0]) return Response.json({error:"workspace_not_found"},{status:403});
+  if(String(rows[0].role)==="viewer") return Response.json({error:"read_only"},{status:403});
   const weddingId=String(rows[0].id);
   const body=await req.json().catch(()=>null) as any;
   const name=String(body?.name||"").trim(),type=String(body?.type||""),size=Number(body?.size||0);
