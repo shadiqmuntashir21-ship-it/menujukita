@@ -16,7 +16,8 @@ Production deployment is intentionally postponed until the Vercel account/projec
 - Workspace membership is resolved server-side
 - Financial permissions enforced server-side
 - Financial Document Vault access enforced at query, upload and download layers
-- HMAC-signed public RSVP
+- HMAC-signed public RSVP with a dedicated signing secret
+- Public RSVP is disabled if the wedding or license is inactive
 - Public RSVP rate limiting
 - Cross-wedding database guards active
 - One active owner per wedding enforced
@@ -25,6 +26,7 @@ Production deployment is intentionally postponed until the Vercel account/projec
 - Live workspace never falls back to Demo while offline
 - Mobile application-style navigation implemented
 - Global Search is permission-aware
+- Safe to Spend deducts paid amounts, outstanding commitments, and reserve buffer
 
 ## Isolated Neon QA
 
@@ -52,6 +54,7 @@ No QA records were written to the production branch.
 - DATABASE_URL
 - NEON_AUTH_BASE_URL
 - NEON_AUTH_COOKIE_SECRET
+- RSVP_SIGNING_SECRET (separate, random, at least 32 characters; do not rotate casually after links are issued)
 - ADMIN_EMAILS
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
