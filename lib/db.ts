@@ -5,6 +5,10 @@ type TransactionOptions={isolationLevel?:string};
 const DEFAULT_BRIDGE="https://br-bitter-waterfall-b5jea6qo-dbbridge.compute.c-7.us-east-2.aws.neon.tech/";
 
 function bridgeUrl(){return process.env.DB_BRIDGE_URL||DEFAULT_BRIDGE}
+function vercelOidcToken(){
+  const context=(globalThis as any)[Symbol.for("@vercel/request-context")]?.get?.();
+  return context?.headers?.["x-vercel-oidc-token"]??process.env.VERCEL_OIDC_TOKEN;
+}
 function normalize(value:any):any{
   if(value===undefined)throw new Error("Undefined values are not allowed");
   if(value instanceof Date)return value.toISOString();
@@ -23,8 +27,8 @@ function spec(strings:TemplateStringsArray,values:any[]):QuerySpec{
   return{text,params:values.map(normalize)};
 }
 async function callBridge(queries:QuerySpec[],mode:"query"|"transaction"="query",options?:TransactionOptions){
-  const token=process.env.VERCEL_OIDC_TOKEN;
-  if(!token)throw new Error("VERCEL_OIDC_TOKEN tidak tersedia untuk DB bridge");
+  const token=vercelOidcToken();
+  if(!token)throw new Error("Vercel OIDC token tidak tersedia di request context");
   const res=await fetch(bridgeUrl(),{
     method:"POST",
     headers:{"content-type":"application/json","authorization":`Bearer ${token}`},
