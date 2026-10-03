@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, CircleDollarSign, FileText, Home, ListChecks, Store, UserRoundPlus, UsersRound } from "lucide-react";
+import { Armchair, CalendarClock, CircleDollarSign, FileText, Home, ListChecks, Store, UserRoundPlus, UsersRound } from "lucide-react";
 import { canViewBudget, requireWorkspace } from "@/lib/workspace";
 import HomeSection from "@/components/live/home-section";
 import PlanSection from "@/components/live/plan-section";
@@ -8,6 +8,7 @@ import GuestsSection from "@/components/live/guests-section";
 import VendorsSection from "@/components/live/vendors-section";
 import DocumentsSection from "@/components/live/documents-section";
 import MembersSection from "@/components/live/members-section";
+import SeatingSection from "@/components/live/seating-section";
 
 export const dynamic="force-dynamic";
 
@@ -20,7 +21,7 @@ export default async function Page(){
   const canEdit=String(wedding.role)!=="viewer";
   const canManageTeam=["owner","partner"].includes(String(wedding.role));
 
-  const [tasks,vendors,budgetItems,paymentsRaw,guests,rundown,documents,members,invites]=await Promise.all([
+  const [tasks,vendors,budgetItems,paymentsRaw,guests,rundown,documents,members,invites,events,seatingTables,seatingAssignments]=await Promise.all([
     db`SELECT * FROM tasks WHERE wedding_id=${wedding.id} ORDER BY (status='done') ASC,due_date NULLS LAST,sort_order,created_at`,
     db`SELECT * FROM vendors WHERE wedding_id=${wedding.id} ORDER BY CASE status WHEN 'booked' THEN 1 WHEN 'negotiating' THEN 2 WHEN 'shortlisted' THEN 3 ELSE 4 END,created_at DESC`,
     canBudget?db`SELECT * FROM budget_items WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`:Promise.resolve([]),
@@ -29,7 +30,10 @@ export default async function Page(){
     db`SELECT * FROM rundown_items WHERE wedding_id=${wedding.id} ORDER BY starts_at,sort_order`,
     db`SELECT * FROM documents WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`,
     db`SELECT id,display_name,invited_email,role,can_view_budget,status,joined_at FROM wedding_members WHERE wedding_id=${wedding.id} AND status<>'revoked' ORDER BY CASE role WHEN 'owner' THEN 0 WHEN 'partner' THEN 1 WHEN 'collaborator' THEN 2 ELSE 3 END,created_at`,
-    canManageTeam?db`SELECT id,invited_email,role,can_view_budget,status,expires_at,created_at FROM member_invites WHERE wedding_id=${wedding.id} AND status='pending' AND expires_at>now() ORDER BY created_at DESC`:Promise.resolve([])
+    canManageTeam?db`SELECT id,invited_email,role,can_view_budget,status,expires_at,created_at FROM member_invites WHERE wedding_id=${wedding.id} AND status='pending' AND expires_at>now() ORDER BY created_at DESC`:Promise.resolve([]),
+    db`SELECT id,name,event_type,event_date,start_time FROM wedding_events WHERE wedding_id=${wedding.id} ORDER BY sort_order,event_date,start_time`,
+    db`SELECT st.*,we.name event_name FROM seating_tables st LEFT JOIN wedding_events we ON we.id=st.event_id WHERE st.wedding_id=${wedding.id} ORDER BY st.sort_order,st.created_at`,
+    db`SELECT sa.*,g.name guest_name FROM seating_assignments sa JOIN guests g ON g.id=sa.guest_id WHERE sa.wedding_id=${wedding.id} ORDER BY sa.id`
   ]);
 
   const payments=(paymentsRaw as any[]).map(p=>({...p,status:p.display_status||p.status}));
@@ -85,6 +89,7 @@ export default async function Page(){
         <a className="side-link" href="#plan"><ListChecks size={18}/>Plan</a>
         {canBudget&&<a className="side-link" href="#money"><CircleDollarSign size={18}/>Money</a>}
         <a className="side-link" href="#guests"><UsersRound size={18}/>Guests</a>
+        <a className="side-link" href="#seating"><Armchair size={18}/>Seating</a>
         <a className="side-link" href="#vendors"><Store size={18}/>Vendor</a>
         <a className="side-link" href="#documents"><FileText size={18}/>Documents</a>
         <a className="side-link" href="#team"><UserRoundPlus size={18}/>Wedding Team</a>
@@ -97,6 +102,7 @@ export default async function Page(){
       <PlanSection tasks={tasks as any[]} rundown={rundown as any[]} canEdit={canEdit}/>
       {canBudget&&<MoneySection wedding={wedding} metrics={metrics} budgetItems={budgetItems as any[]} payments={payments} canEdit={canEdit}/>}
       <GuestsSection guests={guests as any[]} wedding={wedding} canEdit={canEdit}/>
+      <SeatingSection tables={seatingTables as any[]} assignments={seatingAssignments as any[]} guests={guests as any[]} events={events as any[]} canEdit={canEdit}/>
       <VendorsSection vendors={vendors as any[]} canEdit={canEdit}/>
       <DocumentsSection documents={documents as any[]} usedBytes={usedDocumentBytes} canEdit={canEdit}/>
       <MembersSection members={members as any[]} invites={invites as any[]} role={String(wedding.role)}/>
