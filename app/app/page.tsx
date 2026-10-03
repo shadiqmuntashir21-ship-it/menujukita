@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, Armchair, CalendarClock, CircleDollarSign, FileText, Home, ListChecks, Store, UserRoundPlus, UsersRound } from "lucide-react";
+import { Activity, Armchair, Bell, CalendarClock, CircleDollarSign, FileText, Home, ListChecks, Settings, Store, UserRoundPlus, UsersRound } from "lucide-react";
 import { canViewBudget, requireWorkspace } from "@/lib/workspace";
 import HomeSection from "@/components/live/home-section";
 import PlanSection from "@/components/live/plan-section";
@@ -11,6 +11,8 @@ import MembersSection from "@/components/live/members-section";
 import SeatingSection from "@/components/live/seating-section";
 import ActivitySection from "@/components/live/activity-section";
 import WorkspaceSwitcher from "@/components/live/workspace-switcher";
+import NotificationsSection from "@/components/live/notifications-section";
+import SettingsSection from "@/components/live/settings-section";
 
 export const dynamic="force-dynamic";
 
@@ -92,6 +94,13 @@ export default async function Page(){
   });
   (vendors as any[]).filter(v=>["negotiating","contacted"].includes(v.status)).slice(0,2).forEach(v=>priorities.push({title:`Finalisasi ${v.name}`,meta:`${v.category} masih ${v.status}`,kind:"Vendor",score:55}));
   priorities.sort((a,b)=>b.score-a.score);
+  const waitingGuests=(guests as any[]).filter(g=>["waiting","not_sent","maybe"].includes(g.rsvp_status)).length;
+  const notifications:any[]=priorities.slice(0,8).map(p=>({
+    title:p.title,meta:p.meta,kind:p.kind,
+    level:p.score>=100?"critical":p.score>=70?"important":"info"
+  }));
+  if(waitingGuests>0&&days<=60) notifications.push({title:`${waitingGuests} undangan belum final RSVP`,meta:"Follow-up guest list sebelum jumlah tamu dikunci.",kind:"Guest",level:days<=21?"important":"info"});
+  if(vendors.length===0&&days<=180) notifications.push({title:"Vendor belum dicatat",meta:"Tambahkan vendor utama agar kesiapan wedding lebih akurat.",kind:"Vendor",level:"important"});
 
   const metrics={days,health,healthLabel,progress,bookedVendors,confirmedPax,safeToSpend,planned,actual,paid,committed,overduePayments};
 
@@ -107,7 +116,9 @@ export default async function Page(){
         <a className="side-link" href="#vendors"><Store size={18}/>Vendor</a>
         <a className="side-link" href="#documents"><FileText size={18}/>Documents</a>
         <a className="side-link" href="#team"><UserRoundPlus size={18}/>Wedding Team</a>
+        <a className="side-link" href="#notifications"><Bell size={18}/>Notifications</a>
         <a className="side-link" href="#activity"><Activity size={18}/>Activity</a>
+        <a className="side-link" href="#settings"><Settings size={18}/>Settings</a>
         <Link className="side-link" href="/app/day-h"><CalendarClock size={18}/>Day-H Mode</Link>
       </div>
     </aside>
@@ -124,7 +135,9 @@ export default async function Page(){
       <VendorsSection vendors={vendors as any[]} canEdit={canEdit}/>
       <DocumentsSection documents={documents as any[]} usedBytes={usedDocumentBytes} canEdit={canEdit}/>
       <MembersSection members={members as any[]} invites={invites as any[]} role={String(wedding.role)}/>
+      <NotificationsSection items={notifications}/>
       <ActivitySection items={activity as any[]}/>
+      <SettingsSection wedding={wedding} email={String(session.user.email||"")}/>
     </main>
     <nav className="mobile-nav live-mobile-nav">
       <a href="#home"><Home size={18}/><small>Home</small></a>
