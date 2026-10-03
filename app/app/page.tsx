@@ -14,6 +14,7 @@ import WorkspaceSwitcher from "@/components/live/workspace-switcher";
 import NotificationsSection from "@/components/live/notifications-section";
 import SettingsSection from "@/components/live/settings-section";
 import MobileWorkspaceNav from "@/components/live/mobile-workspace-nav";
+import GlobalSearch from "@/components/live/global-search";
 
 export const dynamic="force-dynamic";
 
@@ -103,6 +104,16 @@ export default async function Page(){
   if(waitingGuests>0&&days<=60) notifications.push({title:`${waitingGuests} undangan belum final RSVP`,meta:"Follow-up guest list sebelum jumlah tamu dikunci.",kind:"Guest",level:days<=21?"important":"info"});
   if(vendors.length===0&&days<=180) notifications.push({title:"Vendor belum dicatat",meta:"Tambahkan vendor utama agar kesiapan wedding lebih akurat.",kind:"Vendor",level:"important"});
 
+  const searchItems=[
+    ...(tasks as any[]).map(t=>({type:"Task",title:String(t.title),meta:[t.category,t.status,t.due_date?String(t.due_date):""].filter(Boolean).join(" · "),target:"plan"})),
+    ...(vendors as any[]).map(v=>({type:"Vendor",title:String(v.name),meta:[v.category,v.status].filter(Boolean).join(" · "),target:"vendors"})),
+    ...(guests as any[]).map(g=>({type:"Guest",title:String(g.name),meta:[g.rsvp_status,g.phone].filter(Boolean).join(" · "),target:"guests"})),
+    ...(rundown as any[]).map(r=>({type:"Rundown",title:String(r.activity),meta:[r.pic_name,r.vendor_name,r.location].filter(Boolean).join(" · "),target:"plan"})),
+    ...(members as any[]).map(m=>({type:"Member",title:String(m.display_name||m.invited_email||"Member"),meta:String(m.role||""),target:"team"})),
+    ...(documents as any[]).map(d=>({type:"Document",title:String(d.name),meta:String(d.category||""),target:"documents"})),
+    ...(canBudget?(payments as any[]).map(p=>({type:"Payment",title:String(p.description),meta:[p.vendor_name,p.status].filter(Boolean).join(" · "),target:"money"})):[])
+  ];
+
   const metrics={days,health,healthLabel,progress,bookedVendors,confirmedPax,safeToSpend,planned,actual,paid,committed,overduePayments};
 
   return <div className="demo-shell live-shell">
@@ -126,7 +137,7 @@ export default async function Page(){
     <main className="main live-main">
       <div className="topline">
         <div><small className="muted">LIVE WEDDING · {String(wedding.role).toUpperCase()}</small><h2 style={{margin:"4px 0 0"}}>{wedding.couple_one_name} & {wedding.couple_two_name}</h2></div>
-        <div className="topline-actions"><WorkspaceSwitcher items={workspaces as any[]} activeId={String(wedding.id)}/><span className="badge">{canEdit?"Can edit":"Read only"} · Neon</span></div>
+        <div className="topline-actions"><GlobalSearch items={searchItems}/><WorkspaceSwitcher items={workspaces as any[]} activeId={String(wedding.id)}/><span className="badge">{canEdit?"Can edit":"Read only"} · Neon</span></div>
       </div>
       <HomeSection wedding={wedding} metrics={metrics} priorities={priorities} payments={payments} canBudget={canBudget}/>
       <PlanSection tasks={tasks as any[]} rundown={rundown as any[]} members={members as any[]} vendors={vendors as any[]} canEdit={canEdit}/>
