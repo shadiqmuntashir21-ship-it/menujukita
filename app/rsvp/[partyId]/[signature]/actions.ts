@@ -26,8 +26,11 @@ export async function submitRsvp(partyId:string,signature:string,f:FormData){
   if(Number(rate[0]?.hit_count||0)>30)redirect("/rsvp/"+partyId+"/"+signature+"?error=rate");
 
   const rows=await db`SELECT gp.id,gp.max_pax,g.id guest_id,g.wedding_id
-    FROM guest_parties gp JOIN guests g ON g.party_id=gp.id
-    WHERE gp.id=${partyId} LIMIT 1`;
+    FROM guest_parties gp
+    JOIN guests g ON g.party_id=gp.id
+    JOIN weddings w ON w.id=g.wedding_id AND w.status='active'
+    JOIN licenses l ON l.wedding_id=w.id AND l.status='active'
+    WHERE gp.id=${partyId} AND gp.wedding_id=w.id LIMIT 1`;
   if(!rows[0])redirect("/rsvp/invalid");
   const party:any=rows[0];
   const max=Number(party.max_pax||1);
