@@ -14,6 +14,10 @@ export async function createMemberInvite(_prev:InviteState|null,formData:FormDat
   const role=String(formData.get("role")||"collaborator");
   if(!["partner","collaborator","viewer"].includes(role))return{error:"Role tidak valid."};
   const invitedEmail=String(formData.get("email")||"").trim().toLowerCase();
+  const [quota]=await db`SELECT
+    (SELECT count(*) FROM wedding_members WHERE wedding_id=${wedding.id} AND status='active')+
+    (SELECT count(*) FROM member_invites WHERE wedding_id=${wedding.id} AND status='pending' AND expires_at>now()) AS count`;
+  if(Number(quota.count)>=10)return{error:"Maksimal 10 anggota/invite aktif per wedding."};
   const canViewBudget=formData.get("can_view_budget")==="on";
   const token=crypto.randomBytes(24).toString("base64url");
   const rows=await db`INSERT INTO member_invites(wedding_id,invited_email,role,can_view_budget,token_hash,status,created_by_auth_user_id)
