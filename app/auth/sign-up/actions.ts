@@ -1,1 +1,11 @@
-"use server";import{auth}from"@/lib/auth/server";import{redirect}from"next/navigation";export async function signUp(_:{error:string}|null,f:FormData){const password=String(f.get("password")||"");if(password.length<8)return{error:"Password minimal 8 karakter."};const{error}=await auth.signUp.email({email:String(f.get("email")||""),name:String(f.get("name")||""),password});if(error)return{error:error.message||"Gagal membuat akun"};redirect("/onboarding")}
+"use server";
+import { auth } from "@/lib/auth/server";
+import { redirect } from "next/navigation";
+const safeNext=(v:string)=>v.startsWith("/join/")?v:"/onboarding";
+export async function signUp(_:{error:string}|null,f:FormData){
+  const password=String(f.get("password")||"");
+  if(password.length<8)return{error:"Password minimal 8 karakter."};
+  const{error}=await auth.signUp.email({email:String(f.get("email")||""),name:String(f.get("name")||""),password});
+  if(error)return{error:error.message||"Gagal membuat akun"};
+  redirect(safeNext(String(f.get("next")||"/onboarding")));
+}
