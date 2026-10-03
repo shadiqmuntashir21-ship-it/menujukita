@@ -167,11 +167,20 @@ export async function deleteGuest(f:FormData){
 
 export async function addRundownItem(f:FormData){
   const{db,wedding,session}=await requireEditor();const activity=text(f,"activity"),starts=text(f,"starts_at");if(!activity||!starts)return;
-  const rows=await db`INSERT INTO rundown_items(wedding_id,starts_at,activity,location,status,notes)
-    VALUES(${wedding.id},${starts},${activity},${text(f,"location")||null},'upcoming',${text(f,"notes")||null}) RETURNING id`;
+  const pic=text(f,"pic_member_id")||null,vendor=text(f,"vendor_id")||null;
+  const rows=await db`INSERT INTO rundown_items(wedding_id,starts_at,activity,location,status,notes,pic_member_id,vendor_id)
+    VALUES(${wedding.id},${starts},${activity},${text(f,"location")||null},'upcoming',${text(f,"notes")||null},${pic},${vendor}) RETURNING id`;
   await recordActivity(db,wedding.id,session.user.id,"rundown_created","rundown",String(rows[0]?.id||""),{activity});
   revalidatePath("/app");
 }
+export async function assignRundown(f:FormData){
+  const{db,wedding,session}=await requireEditor();
+  const id=text(f,"id"),pic=text(f,"pic_member_id")||null,vendor=text(f,"vendor_id")||null;
+  const rows=await db`UPDATE rundown_items SET pic_member_id=${pic},vendor_id=${vendor},updated_at=now() WHERE id=${id} AND wedding_id=${wedding.id} RETURNING activity`;
+  if(rows[0])await recordActivity(db,wedding.id,session.user.id,"rundown_assigned","rundown",id,{activity:rows[0].activity,pic,vendor});
+  revalidatePath("/app");
+}
+
 export async function updateRundownStatus(f:FormData){
   const{db,wedding,session}=await requireEditor();const status=text(f,"status"),id=text(f,"id");
   if(!["upcoming","ready","in_progress","done","delayed","cancelled"].includes(status))return;
