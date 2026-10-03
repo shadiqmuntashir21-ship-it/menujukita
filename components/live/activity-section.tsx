@@ -11,7 +11,7 @@ const labels:Record<string,string>={
   rundown_created:"Rundown ditambahkan",rundown_status_changed:"Status rundown diubah",rundown_deleted:"Rundown dihapus",
   member_invited:"Member diundang",member_joined:"Member bergabung",member_removed:"Member dihapus",invite_revoked:"Invite dibatalkan",
   seating_table_created:"Meja dibuat",seating_assigned:"Tamu ditempatkan",seating_removed:"Tamu dipindahkan",seating_table_deleted:"Meja dihapus",
-  document_uploaded:"Dokumen diupload",document_deleted:"Dokumen dihapus"
+  document_uploaded:"Dokumen diupload",document_deleted:"Dokumen dihapus",wedding_settings_updated:"Pengaturan wedding diperbarui"
 };
 
 export default function ActivitySection({items}:{items:any[]}){
