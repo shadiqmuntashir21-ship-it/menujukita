@@ -7,13 +7,13 @@ import { importGuests } from "@/app/app/actions";
 
 type Row={name:string;phone?:string;group?:string;pax?:number};
 
-function parseCsvLine(line:string){
+function parseCsvLine(line:string,delimiter:string){
   const out:string[]=[];let current="";let quoted=false;
   for(let i=0;i<line.length;i++){
     const ch=line[i];
     if(ch==='"'){
       if(quoted&&line[i+1]==='"'){current+='"';i++}else quoted=!quoted;
-    }else if(ch===","&&!quoted){out.push(current.trim());current=""}
+    }else if(ch===delimiter&&!quoted){out.push(current.trim());current=""}
     else current+=ch;
   }
   out.push(current.trim());
@@ -21,9 +21,10 @@ function parseCsvLine(line:string){
 }
 
 function parseCsv(text:string):Row[]{
-  const lines=text.replace(/\r/g,"").split("\n").filter(Boolean);
+  const lines=text.replace(/^\uFEFF/,"").replace(/\r/g,"").split("\n").filter(line=>line.trim().length>0);
   if(!lines.length)return[];
-  const header=parseCsvLine(lines[0]).map(x=>x.toLowerCase().trim());
+  const delimiter=(lines[0].split(";").length>lines[0].split(",").length)?";":",";
+  const header=parseCsvLine(lines[0],delimiter).map(x=>x.toLowerCase().trim());
   const index=(...names:string[])=>header.findIndex(h=>names.includes(h));
   const ni=index("name","nama","guest","guest name");
   const pi=index("phone","whatsapp","wa","telepon","no hp","nomor");
@@ -31,7 +32,7 @@ function parseCsv(text:string):Row[]{
   const xi=index("pax","jumlah","qty","quantity");
   if(ni<0)throw new Error("CSV harus memiliki kolom Name atau Nama.");
   return lines.slice(1,501).map(line=>{
-    const cols=parseCsvLine(line);
+    const cols=parseCsvLine(line,delimiter);
     return{name:cols[ni]||"",phone:pi>=0?cols[pi]:"",group:gi>=0?cols[gi]:"Other",pax:xi>=0?Number(cols[xi]||1):1};
   }).filter(r=>r.name);
 }
