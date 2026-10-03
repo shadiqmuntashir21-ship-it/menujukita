@@ -28,8 +28,8 @@ export default async function Page(){
   const [tasks,vendors,budgetItems,paymentsRaw,guests,rundown,documents,members,invites,events,seatingTables,seatingAssignments,activity,workspaces]=await Promise.all([
     db`SELECT * FROM tasks WHERE wedding_id=${wedding.id} ORDER BY (status='done') ASC,due_date NULLS LAST,sort_order,created_at`,
     db`SELECT * FROM vendors WHERE wedding_id=${wedding.id} ORDER BY CASE status WHEN 'booked' THEN 1 WHEN 'negotiating' THEN 2 WHEN 'shortlisted' THEN 3 ELSE 4 END,created_at DESC`,
-    canBudget?db`SELECT * FROM budget_items WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`:Promise.resolve([]),
-    canBudget?db`SELECT p.*,CASE WHEN p.status='upcoming' AND p.due_date<CURRENT_DATE THEN 'overdue' ELSE p.status END AS display_status FROM payments p WHERE wedding_id=${wedding.id} ORDER BY (p.status='paid') ASC,p.due_date NULLS LAST,p.created_at DESC`:Promise.resolve([]),
+    canBudget?db`SELECT b.*,v.name vendor_name FROM budget_items b LEFT JOIN vendors v ON v.id=b.vendor_id WHERE b.wedding_id=${wedding.id} ORDER BY b.created_at DESC`:Promise.resolve([]),
+    canBudget?db`SELECT p.*,v.name vendor_name,CASE WHEN p.status='upcoming' AND p.due_date<CURRENT_DATE THEN 'overdue' ELSE p.status END AS display_status FROM payments p LEFT JOIN vendors v ON v.id=p.vendor_id WHERE p.wedding_id=${wedding.id} ORDER BY (p.status='paid') ASC,p.due_date NULLS LAST,p.created_at DESC`:Promise.resolve([]),
     db`SELECT * FROM guests WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`,
     db`SELECT * FROM rundown_items WHERE wedding_id=${wedding.id} ORDER BY starts_at,sort_order`,
     canBudget?db`SELECT * FROM documents WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`:db`SELECT * FROM documents WHERE wedding_id=${wedding.id} AND category NOT IN ('invoice','receipt') ORDER BY created_at DESC`,
@@ -129,7 +129,7 @@ export default async function Page(){
       </div>
       <HomeSection wedding={wedding} metrics={metrics} priorities={priorities} payments={payments} canBudget={canBudget}/>
       <PlanSection tasks={tasks as any[]} rundown={rundown as any[]} members={members as any[]} canEdit={canEdit}/>
-      {canBudget&&<MoneySection wedding={wedding} metrics={metrics} budgetItems={budgetItems as any[]} payments={payments} canEdit={canEdit}/>}
+      {canBudget&&<MoneySection wedding={wedding} metrics={metrics} budgetItems={budgetItems as any[]} payments={payments} vendors={vendors as any[]} canEdit={canEdit}/>}
       <GuestsSection guests={guests as any[]} wedding={wedding} canEdit={canEdit}/>
       <SeatingSection tables={seatingTables as any[]} assignments={seatingAssignments as any[]} guests={guests as any[]} events={events as any[]} canEdit={canEdit}/>
       <VendorsSection vendors={vendors as any[]} canEdit={canEdit}/>
