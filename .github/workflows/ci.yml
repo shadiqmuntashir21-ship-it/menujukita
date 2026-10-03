@@ -15,6 +15,7 @@ jobs:
       DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
       NEON_AUTH_BASE_URL: https://example.com/auth
       NEON_AUTH_COOKIE_SECRET: ci-placeholder-cookie-secret-at-least-32-characters
+      RSVP_SIGNING_SECRET: ci-placeholder-rsvp-signing-secret-at-least-32-characters
       ADMIN_EMAILS: ci@example.com
       AWS_ACCESS_KEY_ID: ci-placeholder
       AWS_SECRET_ACCESS_KEY: ci-placeholder
