@@ -1,1 +1,23 @@
-const CACHE="menujukita-v1",CORE=["/","/demo","/icon.svg"];self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE))));self.addEventListener("activate",e=>e.waitUntil(self.clients.claim()));self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(fetch(e.request).then(r=>{const x=r.clone();caches.open(CACHE).then(c=>c.put(e.request,x));return r}).catch(()=>caches.match(e.request).then(r=>r||caches.match("/demo"))))});
+const CACHE="menujukita-v2";
+const CORE=["/","/demo","/offline","/icon.svg"];
+self.addEventListener("install",event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));self.skipWaiting()});
+self.addEventListener("activate",event=>event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()])));
+self.addEventListener("fetch",event=>{
+  const request=event.request;if(request.method!=="GET")return;
+  const url=new URL(request.url);if(url.origin!==self.location.origin)return;
+  if(request.mode==="navigate"){
+    if(url.pathname==="/demo"){
+      event.respondWith(fetch(request).then(response=>{const copy=response.clone();caches.open(CACHE).then(c=>c.put("/demo",copy));return response}).catch(()=>caches.match("/demo")));
+      return;
+    }
+    if(url.pathname.startsWith("/app")||url.pathname.startsWith("/admin")||url.pathname.startsWith("/onboarding")||url.pathname.startsWith("/license-status")){
+      event.respondWith(fetch(request).catch(()=>caches.match("/offline")));
+      return;
+    }
+    event.respondWith(fetch(request).then(response=>{const copy=response.clone();caches.open(CACHE).then(c=>c.put(request,copy));return response}).catch(()=>caches.match(request).then(r=>r||caches.match("/offline"))));
+    return;
+  }
+  if(["script","style","font","image"].includes(request.destination)){
+    event.respondWith(caches.match(request).then(cached=>cached||fetch(request).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE).then(c=>c.put(request,copy))}return response})));
+  }
+});
