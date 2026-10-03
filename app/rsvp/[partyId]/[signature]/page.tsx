@@ -5,7 +5,7 @@ import{submitRsvp}from"./actions";
 
 export const dynamic="force-dynamic";
 
-export default async function Page({params,searchParams}:{params:Promise<{partyId:string;signature:string}>;searchParams:Promise<{saved?:string}>}){
+export default async function Page({params,searchParams}:{params:Promise<{partyId:string;signature:string}>;searchParams:Promise<{saved?:string;error?:string}>}){
   const{partyId,signature}=await params;const q=await searchParams;
   if(!verifyRsvpParty(partyId,signature))notFound();
   const db=sql();
@@ -24,7 +24,7 @@ export default async function Page({params,searchParams}:{params:Promise<{partyI
   return <main className="rsvp-page"><section className="rsvp-card">
     <div className="brand"><span className="brand-mark">M</span><span className="brand-copy"><strong>MenujuKita</strong><small>Wedding RSVP</small></span></div>
     <div className="rsvp-hero"><small>YOU'RE INVITED</small><h1 className="serif">{x.couple_one_name} & {x.couple_two_name}</h1><p>{new Intl.DateTimeFormat("id-ID",{dateStyle:"full"}).format(new Date(x.wedding_date))}{x.city?" · "+x.city:""}</p></div>
-    {q.saved==="1"&&<div className="success-box">Terima kasih. Konfirmasi kehadiran sudah tersimpan.</div>}
+    {q.saved==="1"&&<div className="success-box">Terima kasih. Konfirmasi kehadiran sudah tersimpan.</div>}{q.error==="event"&&<div className="notice">Pilih minimal satu acara jika Anda akan hadir.</div>}{q.error==="rate"&&<div className="notice">Terlalu banyak percobaan RSVP. Coba lagi beberapa saat nanti.</div>}
     <form action={action} className="stack">
       <div className="invitee"><small>Undangan untuk</small><h2>{x.party_name}</h2><span>Hingga {x.max_pax} orang</span></div>
       <label className="field"><span>Konfirmasi kehadiran</span><select className="input" name="status" defaultValue={x.rsvp_status==="attending"?"attending":x.rsvp_status==="not_attending"?"not_attending":"maybe"}><option value="attending">Ya, kami hadir</option><option value="not_attending">Tidak dapat hadir</option><option value="maybe">Belum pasti</option></select></label>
