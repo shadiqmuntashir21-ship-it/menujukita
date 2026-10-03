@@ -7,7 +7,7 @@ const labels:Record<string,string>={
   vendor_created:"Vendor ditambahkan",vendor_status_changed:"Status vendor diubah",vendor_deleted:"Vendor dihapus",
   budget_item_created:"Budget item ditambahkan",budget_item_deleted:"Budget item dihapus",funds_updated:"Dana wedding diperbarui",
   payment_created:"Payment ditambahkan",payment_toggled:"Status payment diubah",payment_deleted:"Payment dihapus",
-  guest_created:"Tamu ditambahkan",guest_status_changed:"RSVP tamu diubah",guest_deleted:"Tamu dihapus",guest_rsvp_updated:"Tamu mengirim RSVP",
+  guest_created:"Tamu ditambahkan",guest_csv_imported:"Guest list diimport dari CSV",guest_status_changed:"RSVP tamu diubah",guest_deleted:"Tamu dihapus",guest_rsvp_updated:"Tamu mengirim RSVP",
   rundown_created:"Rundown ditambahkan",rundown_status_changed:"Status rundown diubah",rundown_deleted:"Rundown dihapus",
   member_invited:"Member diundang",member_joined:"Member bergabung",member_removed:"Member dihapus",invite_revoked:"Invite dibatalkan",
   seating_table_created:"Meja dibuat",seating_assigned:"Tamu ditempatkan",seating_removed:"Tamu dipindahkan",seating_table_deleted:"Meja dihapus",
