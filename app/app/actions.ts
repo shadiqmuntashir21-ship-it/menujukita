@@ -38,7 +38,9 @@ export async function addVendor(f: FormData) {
 }
 export async function updateVendorStatus(f: FormData) {
   const { db, wedding } = await requireWorkspace();
-  await db`UPDATE vendors SET status=${text(f,"status")},updated_at=now() WHERE id=${text(f,"id")} AND wedding_id=${wedding.id}`;
+  const status=text(f,"status");
+  if(!["searching","shortlisted","contacted","negotiating","booked","completed","cancelled"].includes(status)) return;
+  await db`UPDATE vendors SET status=${status},updated_at=now() WHERE id=${text(f,"id")} AND wedding_id=${wedding.id}`;
   revalidatePath("/app");
 }
 export async function deleteVendor(f: FormData) {
@@ -122,7 +124,9 @@ export async function addRundownItem(f: FormData) {
 }
 export async function updateRundownStatus(f: FormData) {
   const { db, wedding } = await requireWorkspace();
-  await db`UPDATE rundown_items SET status=${text(f,"status")},updated_at=now() WHERE id=${text(f,"id")} AND wedding_id=${wedding.id}`;
+  const status=text(f,"status");
+  if(!["upcoming","ready","in_progress","done","delayed","cancelled"].includes(status)) return;
+  await db`UPDATE rundown_items SET status=${status},updated_at=now() WHERE id=${text(f,"id")} AND wedding_id=${wedding.id}`;
   revalidatePath("/app");
 }
 export async function deleteRundownItem(f: FormData) {
