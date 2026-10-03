@@ -46,8 +46,8 @@ async function callBridge(queries:QuerySpec[],mode:"query"|"transaction"="query"
 class BridgeQuery{
   __bridge:QuerySpec;
   constructor(q:QuerySpec){this.__bridge=q}
-  then<TResult1=any[],TResult2=never>(onfulfilled?:((value:any[])=>TResult1|PromiseLike<TResult1>)|null,onrejected?:((reason:any)=>TResult2|PromiseLike<TResult2>)|null){
-    return callBridge([this.__bridge]).then(x=>x[0]).then(onfulfilled as any,onrejected as any);
+  then(onfulfilled?:any,onrejected?:any){
+    return callBridge([this.__bridge]).then(x=>x[0]).then(onfulfilled,onrejected);
   }
   catch(onrejected:any){return callBridge([this.__bridge]).then(x=>x[0]).catch(onrejected)}
   finally(onfinally:any){return callBridge([this.__bridge]).then(x=>x[0]).finally(onfinally)}
