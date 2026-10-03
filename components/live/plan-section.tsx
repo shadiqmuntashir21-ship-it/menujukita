@@ -1,8 +1,8 @@
 import { CalendarRange,Clock3,UserRound,X } from "lucide-react";
-import { addTask,assignTask,toggleTask,deleteTask,addRundownItem,updateRundownStatus,deleteRundownItem } from "@/app/app/actions";
+import { addTask,assignTask,toggleTask,deleteTask,addRundownItem,assignRundown,updateRundownStatus,deleteRundownItem } from "@/app/app/actions";
 import { dateLabel,timeLabel,labels } from "./shared";
 
-export default function PlanSection({tasks,rundown,members,canEdit}:{tasks:any[];rundown:any[];members:any[];canEdit:boolean}){
+export default function PlanSection({tasks,rundown,members,vendors,canEdit}:{tasks:any[];rundown:any[];members:any[];vendors:any[];canEdit:boolean}){
   const memberMap=new Map(members.map(m=>[String(m.id),m.display_name||m.invited_email||m.role]));
   const milestones=tasks.filter(t=>t.due_date&&t.status!=="skipped").slice().sort((a,b)=>String(a.due_date).localeCompare(String(b.due_date))).slice(0,12);
   return <section id="plan" className="module-stack">
@@ -32,8 +32,20 @@ export default function PlanSection({tasks,rundown,members,canEdit}:{tasks:any[]
 
     <div className="panel">
       <div className="module-head"><div><small className="muted">DAY-H</small><h3>Rundown acara</h3></div><Clock3 size={20}/></div>
-      {canEdit&&<form action={addRundownItem} className="quick-form"><input className="input" name="activity" placeholder="Aktivitas, mis. Akad" required/><input className="input compact" type="datetime-local" name="starts_at" required/><input className="input compact" name="location" placeholder="Lokasi"/><button className="btn btn-primary btn-sm">Tambah</button></form>}
-      <div className="list">{rundown.length?rundown.map(r=><div className="row" key={r.id}><div style={{minWidth:82}}><b>{timeLabel(r.starts_at)}</b><br/><small>{dateLabel(r.starts_at)}</small></div><div className="row-grow"><div className="row-title">{r.activity}</div><small>{r.location||"Lokasi belum diisi"}</small></div>{canEdit?<><form action={updateRundownStatus} className="inline-form"><input type="hidden" name="id" value={r.id}/><select className="input compact" name="status" defaultValue={r.status}><option value="upcoming">Upcoming</option><option value="ready">Ready</option><option value="in_progress">Berjalan</option><option value="done">Done</option><option value="delayed">Delayed</option></select><button className="btn btn-sm">Simpan</button></form><form action={deleteRundownItem}><input type="hidden" name="id" value={r.id}/><button className="icon-button danger"><X size={16}/></button></form></>:<span className="badge">{labels[r.status]||r.status}</span>}</div>):<div className="empty-mini">Belum ada rundown.</div>}</div>
+      {canEdit&&<form action={addRundownItem} className="rundown-create-form">
+        <input className="input" name="activity" placeholder="Aktivitas, mis. Akad" required/>
+        <input className="input compact" type="datetime-local" name="starts_at" required/>
+        <input className="input compact" name="location" placeholder="Lokasi"/>
+        <select className="input compact" name="pic_member_id" defaultValue=""><option value="">Tanpa PIC</option>{members.map(m=><option value={m.id} key={m.id}>{m.display_name||m.invited_email||m.role}</option>)}</select>
+        <select className="input compact" name="vendor_id" defaultValue=""><option value="">Tanpa vendor</option>{vendors.map(v=><option value={v.id} key={v.id}>{v.name}</option>)}</select>
+        <button className="btn btn-primary btn-sm">Tambah</button>
+      </form>}
+      <div className="list">{rundown.length?rundown.map(r=><div className="row" key={r.id}>
+        <div style={{minWidth:82}}><b>{timeLabel(r.starts_at)}</b><br/><small>{dateLabel(r.starts_at)}</small></div>
+        <div className="row-grow"><div className="row-title">{r.activity}</div><small>{r.location||"Lokasi belum diisi"}{r.pic_name?" · PIC "+r.pic_name:""}{r.vendor_name?" · "+r.vendor_name:""}</small></div>
+        {canEdit&&<form action={assignRundown} className="rundown-assignee"><input type="hidden" name="id" value={r.id}/><select name="pic_member_id" defaultValue={r.pic_member_id||""}><option value="">PIC</option>{members.map(m=><option value={m.id} key={m.id}>{m.display_name||m.invited_email||m.role}</option>)}</select><select name="vendor_id" defaultValue={r.vendor_id||""}><option value="">Vendor</option>{vendors.map(v=><option value={v.id} key={v.id}>{v.name}</option>)}</select><button className="btn btn-sm">Set</button></form>}
+        {canEdit?<><form action={updateRundownStatus} className="inline-form"><input type="hidden" name="id" value={r.id}/><select className="input compact" name="status" defaultValue={r.status}><option value="upcoming">Upcoming</option><option value="ready">Ready</option><option value="in_progress">Berjalan</option><option value="done">Done</option><option value="delayed">Delayed</option></select><button className="btn btn-sm">Simpan</button></form><form action={deleteRundownItem}><input type="hidden" name="id" value={r.id}/><button className="icon-button danger"><X size={16}/></button></form></>:<span className="badge">{labels[r.status]||r.status}</span>}
+      </div>):<div className="empty-mini">Belum ada rundown.</div>}</div>
     </div>
   </section>;
 }
