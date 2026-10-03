@@ -11,8 +11,9 @@ const num=(f:FormData,key:string)=>Math.max(0,Number(f.get(key)||0));
 export async function addTask(f:FormData){
   const{db,wedding,session}=await requireEditor();const title=text(f,"title");if(!title)return;
   const [quota]=await db`SELECT count(*)::int count FROM tasks WHERE wedding_id=${wedding.id}`;if(Number(quota.count)>=500)throw new Error("Task limit reached");
-  const rows=await db`INSERT INTO tasks(wedding_id,title,category,due_date,priority,status)
-    VALUES(${wedding.id},${title},${text(f,"category")||"general"},${text(f,"due_date")||null},${text(f,"priority")||"medium"},'todo') RETURNING id`;
+  const assignee=text(f,"assignee_member_id")||null;
+  const rows=await db`INSERT INTO tasks(wedding_id,title,category,due_date,priority,status,assignee_member_id)
+    VALUES(${wedding.id},${title},${text(f,"category")||"general"},${text(f,"due_date")||null},${text(f,"priority")||"medium"},'todo',${assignee}) RETURNING id`;
   await recordActivity(db,wedding.id,session.user.id,"task_created","task",String(rows[0]?.id||""),{title});
   revalidatePath("/app");
 }
@@ -24,6 +25,18 @@ export async function toggleTask(f:FormData){
   if(rows[0])await recordActivity(db,wedding.id,session.user.id,"task_toggled","task",id,{title:rows[0].title,status:rows[0].status});
   revalidatePath("/app");
 }
+export async function assignTask(f:FormData){
+  const{db,wedding,session}=await requireEditor();
+  const id=text(f,"id"),memberId=text(f,"assignee_member_id")||null;
+  if(memberId){
+    const ok=await db`SELECT display_name FROM wedding_members WHERE id=${memberId} AND wedding_id=${wedding.id} AND status='active' LIMIT 1`;
+    if(!ok[0])throw new Error("Invalid assignee");
+  }
+  const rows=await db`UPDATE tasks SET assignee_member_id=${memberId},updated_at=now() WHERE id=${id} AND wedding_id=${wedding.id} RETURNING title`;
+  if(rows[0])await recordActivity(db,wedding.id,session.user.id,"task_assigned","task",id,{title:rows[0].title,memberId});
+  revalidatePath("/app");
+}
+
 export async function deleteTask(f:FormData){
   const{db,wedding,session}=await requireEditor();const id=text(f,"id");
   const rows=await db`DELETE FROM tasks WHERE id=${id} AND wedding_id=${wedding.id} RETURNING title`;
