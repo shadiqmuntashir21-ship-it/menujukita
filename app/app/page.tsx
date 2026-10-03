@@ -128,7 +128,7 @@ export default async function Page(){
         <div className="topline-actions"><WorkspaceSwitcher items={workspaces as any[]} activeId={String(wedding.id)}/><span className="badge">{canEdit?"Can edit":"Read only"} · Neon</span></div>
       </div>
       <HomeSection wedding={wedding} metrics={metrics} priorities={priorities} payments={payments} canBudget={canBudget}/>
-      <PlanSection tasks={tasks as any[]} rundown={rundown as any[]} canEdit={canEdit}/>
+      <PlanSection tasks={tasks as any[]} rundown={rundown as any[]} members={members as any[]} canEdit={canEdit}/>
       {canBudget&&<MoneySection wedding={wedding} metrics={metrics} budgetItems={budgetItems as any[]} payments={payments} canEdit={canEdit}/>}
       <GuestsSection guests={guests as any[]} wedding={wedding} canEdit={canEdit}/>
       <SeatingSection tables={seatingTables as any[]} assignments={seatingAssignments as any[]} guests={guests as any[]} events={events as any[]} canEdit={canEdit}/>
