@@ -12,6 +12,6 @@ export default function SettingsSection({wedding,email}:{wedding:any;email:strin
         <button className="btn btn-primary">Simpan Settings</button>
       </form>:<div className="empty-state"><b>Read-only settings</b><span className="muted">Owner atau partner dapat mengubah detail wedding.</span></div>}
     </section>
-    <aside className="panel account-card"><small className="muted">ACCOUNT</small><h3>{email}</h3><p className="muted">Role di workspace ini: <b>{wedding.role}</b>.</p><form action={signOut}><button className="btn" style={{width:"100%"}}><LogOut size={16}/>Keluar dari MenujuKita</button></form></aside>
+    <aside className="panel account-card"><small className="muted">ACCOUNT</small><h3>{email}</h3><p className="muted">Role di workspace ini: <b>{wedding.role}</b>.</p><div className="stack"><a className="btn btn-soft" href="/onboarding">Aktifkan Wedding Lain</a><form action={signOut}><button className="btn" style={{width:"100%"}}><LogOut size={16}/>Keluar dari MenujuKita</button></form></div></aside>
   </div></section>
 }
