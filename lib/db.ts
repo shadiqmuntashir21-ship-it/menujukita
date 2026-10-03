@@ -39,7 +39,7 @@ async function callBridge(queries:QuerySpec[],mode:"query"|"transaction"="query"
   }
   return data.results as any[][];
 }
-class BridgeQuery implements PromiseLike<any[]>{
+class BridgeQuery{
   __bridge:QuerySpec;
   constructor(q:QuerySpec){this.__bridge=q}
   then<TResult1=any[],TResult2=never>(onfulfilled?:((value:any[])=>TResult1|PromiseLike<TResult1>)|null,onrejected?:((reason:any)=>TResult2|PromiseLike<TResult2>)|null){
@@ -59,7 +59,7 @@ function bridgeDb(){
   };
   return tag;
 }
-export function sql(){
+export function sql():any{
   if(process.env.VERCEL==="1")return bridgeDb();
   if(!process.env.DATABASE_URL)throw new Error("DATABASE_URL belum dikonfigurasi");
   return neon(process.env.DATABASE_URL);
