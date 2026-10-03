@@ -27,6 +27,7 @@ Production deployment is intentionally postponed until the Vercel account/projec
 - Mobile application-style navigation implemented
 - Global Search is permission-aware
 - Safe to Spend deducts paid amounts, outstanding commitments, and reserve buffer
+- Basic production security headers configured (`nosniff`, frame deny, referrer policy, permissions policy, COOP)
 
 ## Isolated Neon QA
 
@@ -46,6 +47,8 @@ Passed integration checks:
 6. cross-wedding RSVP reference is rejected
 7. cross-wedding rundown/vendor reference is rejected
 8. valid same-wedding partner/payment/seating/task/RSVP/rundown relations succeed
+9. active-license wedding RSVP remains publicly available
+10. suspended-license wedding RSVP is hidden
 
 No QA records were written to the production branch.
 
