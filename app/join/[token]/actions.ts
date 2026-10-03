@@ -17,6 +17,9 @@ export async function acceptInvite(token:string){
   if(!rows[0])redirect("/join/"+token+"?error=invalid");
   const x:any=rows[0];
   if(x.wedding_status!=="active"||x.license_status!=="active")redirect("/join/"+token+"?error=inactive");
+  if(x.invited_email && String(session.user.email||"").toLowerCase()!==String(x.invited_email).toLowerCase()){
+    redirect("/join/"+token+"?error=email");
+  }
   await db.transaction([
     db`INSERT INTO wedding_members(wedding_id,auth_user_id,invited_email,display_name,role,can_view_budget,status,joined_at)
       VALUES(${x.wedding_id},${session.user.id},${x.invited_email||session.user.email||null},${session.user.name||session.user.email||"Member"},${x.role},${x.can_view_budget},'active',now())
