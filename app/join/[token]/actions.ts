@@ -1,6 +1,7 @@
 "use server";
 
 import crypto from "node:crypto";
+import { cookies } from "next/headers";
 import { auth } from "@/lib/auth/server";
 import { sql } from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -17,9 +18,8 @@ export async function acceptInvite(token:string){
   if(!rows[0])redirect("/join/"+token+"?error=invalid");
   const x:any=rows[0];
   if(x.wedding_status!=="active"||x.license_status!=="active")redirect("/join/"+token+"?error=inactive");
-  if(x.invited_email && String(session.user.email||"").toLowerCase()!==String(x.invited_email).toLowerCase()){
-    redirect("/join/"+token+"?error=email");
-  }
+  if(x.invited_email&&String(session.user.email||"").toLowerCase()!==String(x.invited_email).toLowerCase())redirect("/join/"+token+"?error=email");
+
   await db.transaction([
     db`INSERT INTO wedding_members(wedding_id,auth_user_id,invited_email,display_name,role,can_view_budget,status,joined_at)
       VALUES(${x.wedding_id},${session.user.id},${x.invited_email||session.user.email||null},${session.user.name||session.user.email||"Member"},${x.role},${x.can_view_budget},'active',now())
@@ -27,5 +27,8 @@ export async function acceptInvite(token:string){
     db`UPDATE member_invites SET status='accepted',accepted_by_auth_user_id=${session.user.id},accepted_at=now() WHERE id=${x.id} AND status='pending'`,
     db`INSERT INTO activity_logs(wedding_id,auth_user_id,action,entity_type,entity_id,metadata) VALUES(${x.wedding_id},${session.user.id},'member_joined','member',${session.user.id},'{}'::jsonb)`
   ],{isolationLevel:"Serializable"});
+
+  const jar=await cookies();
+  jar.set("menujukita_active_wedding",String(x.wedding_id),{httpOnly:true,sameSite:"lax",secure:process.env.NODE_ENV==="production",path:"/",maxAge:60*60*24*365});
   redirect("/app");
 }
