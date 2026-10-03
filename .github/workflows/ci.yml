@@ -13,10 +13,7 @@ jobs:
     timeout-minutes: 20
     env:
       DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
-      NEON_AUTH_BASE_URL: https://example.com/auth
-      NEON_AUTH_COOKIE_SECRET: ci-placeholder-cookie-secret-at-least-32-characters
       RSVP_SIGNING_SECRET: ci-placeholder-rsvp-signing-secret-at-least-32-characters
-      ADMIN_EMAILS: ci@example.com
       AWS_ACCESS_KEY_ID: ci-placeholder
       AWS_SECRET_ACCESS_KEY: ci-placeholder
       AWS_ENDPOINT_URL_S3: https://example.com
@@ -34,8 +31,8 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Typecheck
         run: npx tsc --noEmit
-      - name: Vercel parity build without production secrets
+      - name: Build without runtime secrets
         run: |
-          env -u DATABASE_URL               -u NEON_AUTH_BASE_URL               -u NEON_AUTH_COOKIE_SECRET               -u RSVP_SIGNING_SECRET               -u ADMIN_EMAILS               -u AWS_ACCESS_KEY_ID               -u AWS_SECRET_ACCESS_KEY               -u AWS_ENDPOINT_URL_S3               -u AWS_REGION               -u NEON_STORAGE_BUCKET               npm run build
-      - name: Production build with configured environment
+          env -u DATABASE_URL               -u RSVP_SIGNING_SECRET               -u AWS_ACCESS_KEY_ID               -u AWS_SECRET_ACCESS_KEY               -u AWS_ENDPOINT_URL_S3               -u AWS_REGION               -u NEON_STORAGE_BUCKET               npm run build
+      - name: Production-parity build with configured environment
         run: npm run build

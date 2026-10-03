@@ -1,95 +1,84 @@
-# MenujuKita — Production Readiness
+# MenujuKita — Final Production Readiness
 
-Status: **PRE-DEPLOY QA**
+Status: **FINAL QA — NO ACTUAL PRODUCTION DEPLOY YET**
 
-Production deployment is intentionally postponed until the Vercel account/project is connected correctly. Do not create repeated preview/production deployments just for testing.
+## Product Baseline
+- Promo pilot: **Rp49.000 / wedding**
+- Max **250 active wedding licenses**
+- 1 lisensi = 1 Wedding Workspace
+- Customer auth: **Kode Lisensi + PIN**, tanpa email/password
+- Demo: local browser only, tidak memakai Neon/license
+- Admin: separate Super Admin PIN
+- UI: Wedding Studio view-based shell + mobile bottom navigation
+- Day-H: separate focus mode
 
-## Verified
-
-- GitHub CI Next.js production build: passing
-- Runtime dependencies pinned to exact versions
-- Neon production branch contains no QA data
-- Pilot capacity hard limit: 250 active wedding licenses
-- Demo data is browser-local and does not consume licenses
-- Neon Auth provisioned
-- Private Object Storage bucket provisioned
-- Workspace membership is resolved server-side
-- Financial permissions enforced server-side
-- Financial Document Vault access enforced at query, upload and download layers
-- HMAC-signed public RSVP with a dedicated signing secret
-- Public RSVP is disabled if the wedding or license is inactive
-- Public RSVP rate limiting
-- Cross-wedding database guards active
-- One active owner per wedding enforced
-- Multi-workspace switcher supports owner/partner/collaborator workflows
-- PWA 192px / 512px / maskable icons configured
-- Live workspace never falls back to Demo while offline
-- Mobile application-style navigation implemented
-- Global Search is permission-aware
-- Safe to Spend deducts paid amounts, outstanding commitments, and reserve buffer
-- Basic production security headers configured (`nosniff`, frame deny, referrer policy, permissions policy, COOP)
+## Auth & Security Gate
+- Kode Lisensi disimpan hash-only
+- PIN customer memakai random salt + scrypt
+- PIN Super Admin memakai random salt + scrypt dan di-seed privat ke app_settings
+- Customer/admin login rate limited
+- Session token random 256-bit; database hanya menyimpan token hash
+- Force logout dan reset PIN merevoke session lama
+- Access audit log aktif
+- Public RSVP HMAC signing tetap terpisah
+- Suspended/revoked license tidak dapat masuk workspace
+- Cross-wedding database triggers tetap aktif
+- Private file signed URL tetap aktif
 
 ## Isolated Neon QA
+Dev branch: dev-license-pin-studio-20261003
+Branch expires automatically on 2026-10-04T15:00:00Z.
 
-Temporary branch:
+Verified:
+1. license pin_salt tersedia
+2. license session dapat dibuat
+3. license session dapat direvoke
+4. admin session table tersedia
+5. access log table tersedia
+6. Super Admin hash + salt dapat disimpan
+7. production branch belum menerima QA records
 
-`qa-menujukita-predeploy-20261003`
+## Vercel Deployment Guard
+Repo sebelumnya terhubung ke 3 project Vercel.
+Canonical project:
+- name: menujukita
+- ID: prj_rp05XZ24A3tOZSw1dQmJUF5bQ4AO
 
-It expires automatically on 2026-10-04.
+Duplicates yang harus tetap skip:
+- menujukita-da4n
+- menujukita-1xop
 
-Passed integration checks:
+CI-only commits memakai:
+- vercel.json ignoreCommand = exit 0
 
-1. active license capacity guard rejects capacity overflow
-2. second active owner is rejected
-3. cross-wedding vendor/payment reference is rejected
-4. cross-wedding guest/seating reference is rejected
-5. cross-wedding task/event reference is rejected
-6. cross-wedding RSVP reference is rejected
-7. cross-wedding rundown/vendor reference is rejected
-8. valid same-wedding partner/payment/seating/task/RSVP/rundown relations succeed
-9. active-license wedding RSVP remains publicly available
-10. suspended-license wedding RSVP is hidden
+Final deploy commit memakai condition berbasis VERCEL_PROJECT_ID:
+- duplicates → exit 0 / ignored
+- canonical menujukita → exit 1 / build
 
-No QA records were written to the production branch.
+Dengan demikian actual Vercel production build tetap **satu kali**.
 
 ## Production Environment Required
-
 - DATABASE_URL
-- NEON_AUTH_BASE_URL
-- NEON_AUTH_COOKIE_SECRET
-- RSVP_SIGNING_SECRET (separate, random, at least 32 characters; do not rotate casually after links are issued)
-- ADMIN_EMAILS
+- RSVP_SIGNING_SECRET
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
 - AWS_ENDPOINT_URL_S3
 - AWS_REGION
 - NEON_STORAGE_BUCKET
 
-## Final Deployment Sequence
+Neon Auth variables tidak lagi dibutuhkan untuk customer login.
 
-1. Confirm the correct Vercel account/team is connected.
-2. Create/link the Vercel project to `shadiqmuntashir21-ship-it/menujukita`.
-3. Configure all production environment variables.
-4. Confirm Node.js 22 runtime.
-5. Perform one production deployment.
-6. Obtain the final production domain.
-7. Add the production domain to Neon Auth trusted domains.
-8. Verify:
-   - landing
-   - Demo Mode
-   - installable PWA
-   - sign-up/sign-in
-   - license activation
-   - live workspace
-   - task/vendor/budget/payment/guest CRUD
-   - public RSVP
-   - seating
-   - collaboration invite
-   - Document Vault
-   - Day-H Mode
-   - admin capacity controls
-9. Scan Vercel build/runtime logs for errors.
+## Final Deployment Sequence
+1. Push CI-only commit dengan semua Vercel build di-skip.
+2. Pastikan GitHub CI npm ci + tsc + next build hijau.
+3. Apply migration auth/session ke production Neon.
+4. Seed Super Admin PIN secara privat ke production DB.
+5. Verifikasi production schema + 250-cap trigger.
+6. Ubah Vercel ignoreCommand agar hanya canonical project boleh build.
+7. Push final deploy commit.
+8. Pastikan hanya canonical project membuat actual deployment.
+9. Smoke test landing, Demo Pro, PWA, login, setup, Wedding Studio, CRUD, RSVP, seating, Vault, Day-H, Admin, support mode.
+10. Scan Vercel build/runtime logs.
 
 ## Deployment Rule
-
-**Do not deploy repeatedly during development. Production deployment happens only after all checks above are satisfied.**
+**Tidak ada actual deploy berulang selama development. Hanya satu actual production deployment di akhir.**

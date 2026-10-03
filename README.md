@@ -2,125 +2,98 @@
 
 **Plan the journey. Enjoy the day.**
 
-MenujuKita adalah wedding planning command center dari Teman Digital. Produk ini dirancang sebagai PWA mobile-first untuk membantu pasangan mengendalikan persiapan wedding tanpa menyebarkan data ke banyak chat, notes, spreadsheet, dan reminder.
+MenujuKita adalah **Wedding Planning Studio** dari Teman Digital: ruang kerja wedding yang menyatukan checklist, budget, vendor, tamu, RSVP, seating, dokumen, dan Day-H Mode tanpa terasa seperti dashboard bisnis.
 
 ## Pilot
+- Harga promo: **Rp49.000 / wedding**
 - Kapasitas resmi: **maksimal 250 wedding/lisensi aktif**
-- 1 lisensi = 1 wedding workspace
-- Demo tidak memakai lisensi dan tidak membuat workspace database
-- Database: Neon Lakebase Postgres
-- Auth: Neon Managed Better Auth
+- **1 lisensi = 1 Wedding Workspace**
+- Customer login memakai **Kode Lisensi + PIN** — tanpa email/password
+- Demo Alya & Raka berjalan lokal di browser dan **tidak memakai slot lisensi**
+- Database: Neon Postgres
 - Private files: Neon Object Storage
+- PWA mobile-first untuk HP dan laptop
 
-## Fitur yang sudah dibangun
-### Demo-first
-- dummy wedding Alya & Raka
-- tanpa login
-- localStorage persistence
-- Reset Demo
-- simulasi 30 hari
-- checklist, vendor, guest, budget, Safe to Spend, Wedding Health
+## Pengalaman Produk
 
-### Live Workspace
-- smart onboarding dari tanggal wedding
-- seeded checklist dan kategori budget
-- Wedding Health berbasis data live
-- What Should I Do Next
-- checklist CRUD
-- rundown + Day-H Mode
-- budget + Wedding Safe to Spend
-- payment tracker
-- vendor manager
-- guest manager
-- secure public RSVP
-- RSVP per event
-- seating plan basic
-- private Document Vault
-- Wedding Team collaboration
-- role: owner / partner / collaborator / viewer
-- budget permission terpisah
-- license suspend/reactivate/revoke handling
+### Landing
+- positioning sebagai wedding journey, bukan dashboard generik
+- CTA Demo tanpa daftar
+- promo Rp49.000
+- alur pembelian → Kode Lisensi + PIN → setup wedding
 
-### Admin
-- admin allowlist via `ADMIN_EMAILS`
-- generate activation code
-- kode penuh hanya muncul saat dibuat; database menyimpan SHA-256 hash
-- registry lisensi
-- capacity counter
-- hard guard 250 active licenses di database
+### Demo Pro
+- tanpa login dan tanpa database
+- localStorage persistence + Reset Demo
+- editable checklist, budget, vendor, RSVP simulation, visual seating, Vault preview, Day-H preview
 
-### PWA
-- manifest
-- app icon
-- service worker
-- standalone mode foundation
-- demo shell cache
+### Wedding Studio
+- view-based workspace, bukan satu halaman panjang
+- Wedding Health + What Needs Your Attention
+- Wedding Journey & smart checklist
+- Wedding Wallet + Safe to Spend
+- Vendor Partners
+- Guest Book + public RSVP
+- Visual Seating
+- Private Wedding Vault
+- Wedding Team access
+- Notification Center + Activity
+- Day-H Mode terpisah dan fokus
 
-## Stack
-- Next.js App Router
-- React
-- Neon Managed Better Auth
-- Neon serverless driver
-- Neon Postgres
-- Neon Object Storage (private S3-compatible bucket)
-- AWS S3 SDK for presigned file operations
-- Lucide icons
+### Admin Control Center
+- Super Admin login dengan PIN terpisah
+- generate Kode Lisensi + random 6-digit PIN
+- database menyimpan **code hash** dan **salted scrypt PIN hash**
+- PIN penuh hanya tampil ketika dibuat atau di-reset
+- reset PIN otomatis memutus session lama
+- force logout seluruh session sebuah lisensi
+- suspend/reactivate/revoke
+- Open Wedding support mode dengan audit trail
+- capacity monitoring 250 slot
+
+## Security
+- customer session memakai random 256-bit server-side token; database hanya menyimpan token hash
+- PIN customer memakai random salt + scrypt
+- PIN Super Admin juga memakai random salt + scrypt dan nilainya di-seed privat ke database, tidak ditulis ke repository
+- login customer/admin rate-limited
+- access log menyimpan hashed IP, bukan IP mentah
+- public RSVP memakai HMAC secret terpisah
+- public RSVP hanya tersedia untuk wedding + lisensi aktif
+- private documents memakai short-lived signed URL
+- file max 5 MB; workspace document max 15 MB
+- cross-wedding database guards tetap aktif
+- hard cap active license tetap 250
 
 ## Environment
-Copy `.env.example` to `.env.local` and configure all values.
-
 Required:
-- `DATABASE_URL`
-- `NEON_AUTH_BASE_URL`
-- `NEON_AUTH_COOKIE_SECRET`
-- `RSVP_SIGNING_SECRET` (separate from auth cookies; keep stable after public RSVP links are issued)
-- `ADMIN_EMAILS`
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_ENDPOINT_URL_S3`
-- `AWS_REGION`
-- `NEON_STORAGE_BUCKET`
+- DATABASE_URL
+- RSVP_SIGNING_SECRET
+- AWS_ACCESS_KEY_ID
+- AWS_SECRET_ACCESS_KEY
+- AWS_ENDPOINT_URL_S3
+- AWS_REGION
+- NEON_STORAGE_BUCKET
 
 Never commit real secrets.
 
 ## Database
-Reproducible application schema is stored in:
-`database/schema.sql`
+Base application schema: database/schema.sql
 
-Neon Managed Better Auth owns the separate `neon_auth` schema.
-
-## Security model
-- all live CRUD actions resolve the authenticated wedding membership server-side
-- viewer role is read-only
-- collaborator can edit operational planning
-- financial data requires separate budget permission
-- public RSVP links are HMAC-signed with a dedicated `RSVP_SIGNING_SECRET`
-- public RSVP requires an active wedding and active license
-- targeted collaboration invites are tied to the invited email
-- documents use a private object bucket and short-lived signed URLs
-- uploads are capped at 5 MB/file and 15 MB/workspace
-- suspended/revoked licenses cannot enter live workspace
+Migration Kode Lisensi + PIN:
+database/migrations/20261003_license_pin_sessions.sql
 
 ## Development
-```bash
-npm install
-npm run dev
-```
+npm ci && npm run dev
 
-## CI
-GitHub Actions runs:
-```bash
-npm ci
-npx tsc --noEmit
-npm run build
-```
-No production deployment is performed by CI.
+## CI gate
+npm ci --no-audit --no-fund → npx tsc --noEmit → npm run build
 
 ## Deployment policy
-The pilot is intentionally **not deployed yet**. Production deployment should happen only after the build gate, final responsive QA, production environment variables, Auth trusted domain, and storage credentials are confirmed.
+**Actual production deployment hanya sekali di akhir.**
+Selama CI, Vercel Git build di-skip melalui vercel.json. Setelah CI hijau, rule diubah agar hanya project canonical MenujuKita yang boleh build; project duplikat tetap skip.
 
 ## Brand
 **MenujuKita**  
 *Plan the journey. Enjoy the day.*
 
-A Teman Digital Product.
+Created by **Teman Digital**.

@@ -1,6 +1,1 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "nextjs",
-  "installCommand": "npm ci --no-audit --no-fund",
-  "buildCommand": "npm run build"
-}
+{"$schema":"https://openapi.vercel.sh/vercel.json","ignoreCommand":"exit 0"}

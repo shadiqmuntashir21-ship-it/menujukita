@@ -1,32 +1,17 @@
 "use client";
 import { useRef,useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText,Trash2,UploadCloud } from "lucide-react";
+import { FileText,FolderLock,UploadCloud } from "lucide-react";
 import { deleteDocument,registerDocument } from "@/app/app/document-actions";
-
 const fmt=(n:number)=>n<1024*1024?`${Math.ceil(n/1024)} KB`:`${(n/1024/1024).toFixed(1)} MB`;
-
-export default function DocumentsSection({documents,usedBytes,canEdit,canBudget,weddingId}:{documents:any[];usedBytes:number;canEdit:boolean;canBudget:boolean;weddingId:string}){
-  const router=useRouter(),input=useRef<HTMLInputElement>(null);
-  const[busy,setBusy]=useState(false);const[error,setError]=useState("");
-  async function upload(formData:FormData){
-    const file=input.current?.files?.[0]; if(!file||!canEdit)return;
-    setBusy(true);setError("");
-    try{
-      const presign=await fetch("/api/storage/presign",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:file.name,type:file.type,size:file.size,category:String(formData.get("category")||"other"),weddingId})});
-      const data=await presign.json();
-      if(!presign.ok)throw new Error(data.error==="workspace_quota"?"Kuota dokumen 15 MB sudah penuh.":data.error==="read_only"?"Akses viewer hanya dapat membaca.":"File tidak dapat diupload.");
-      const put=await fetch(data.url,{method:"PUT",headers:{"content-type":file.type},body:file});
-      if(!put.ok)throw new Error("Upload ke storage gagal.");
-      await registerDocument({objectKey:data.key,name:file.name,contentType:file.type,size:file.size,category:String(formData.get("category")||"other")});
-      if(input.current)input.current.value="";
-      router.refresh();
-    }catch(e:any){setError(e.message||"Upload gagal.");}finally{setBusy(false)}
-  }
-  return <section id="documents" className="module-stack"><div className="panel">
-    <div className="module-head"><div><small className="muted">PRIVATE DOCUMENT VAULT</small><h3>Dokumen wedding</h3></div><span className="badge">{fmt(usedBytes)} / 15 MB</span></div>
-    {canEdit?<form action={upload} className="document-upload"><input ref={input} className="input" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" required/><select className="input" name="category" defaultValue="vendor"><option value="vendor">Vendor Contract</option>{canBudget&&<option value="invoice">Invoice</option>}{canBudget&&<option value="receipt">Receipt</option>}<option value="rundown">Rundown</option><option value="floorplan">Floorplan</option><option value="other">Other</option></select><button className="btn btn-primary" disabled={busy}><UploadCloud size={16}/>{busy?"Mengupload...":"Upload"}</button></form>:<div className="empty-mini">Viewer dapat membuka dokumen, tetapi tidak dapat upload atau menghapus.</div>}
-    {error&&<div className="notice" style={{marginTop:12}}>{error}</div>}
-    <div className="list document-list">{documents.length?documents.map(d=><div className="row" key={d.id}><FileText size={18}/><div className="row-grow"><b>{d.name}</b><small>{d.category} · {fmt(Number(d.size_bytes||0))}</small></div><a className="btn btn-sm" href={"/api/documents/"+d.id} target="_blank">Buka</a>{canEdit&&<form action={deleteDocument}><input type="hidden" name="id" value={d.id}/><button className="icon-button danger"><Trash2 size={15}/></button></form>}</div>):<div className="empty-state"><FileText size={26}/><b>Belum ada dokumen.</b><span className="muted">Simpan kontrak, invoice, receipt, rundown, atau floorplan di sini.</span></div>}</div>
-  </div></section>
+export default function DocumentsSection({documents,usedBytes,canBudget,weddingId}:{documents:any[];usedBytes:number;canEdit:boolean;canBudget:boolean;weddingId:string}){
+ const router=useRouter(),input=useRef<HTMLInputElement>(null),[busy,setBusy]=useState(false),[error,setError]=useState("");
+ async function upload(formData:FormData){const file=input.current?.files?.[0];if(!file)return;setBusy(true);setError("");try{const presign=await fetch("/api/storage/presign",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:file.name,type:file.type,size:file.size,category:String(formData.get("category")||"other"),weddingId})}),data=await presign.json();if(!presign.ok)throw new Error(data.error==="workspace_quota"?"Kuota dokumen 15 MB sudah penuh.":"File tidak dapat diupload.");const put=await fetch(data.url,{method:"PUT",headers:{"content-type":file.type},body:file});if(!put.ok)throw new Error("Upload storage gagal.");await registerDocument({objectKey:data.key,name:file.name,contentType:file.type,size:file.size,category:String(formData.get("category")||"other")});if(input.current)input.current.value="";router.refresh()}catch(e:any){setError(e.message||"Upload gagal.")}finally{setBusy(false)}}
+ const groups=["vendor","invoice","receipt","rundown","floorplan","other"];
+ return <section id="documents" className="module-stack"><header className="module-editorial-head"><div><span className="micro-label">VAULT</span><h2 className="serif">Private Wedding Vault</h2><p>Kontrak, invoice, receipt, floorplan, dan rundown berada di satu tempat yang tenang.</p></div><div className="module-score"><FolderLock size={23}/><span>{fmt(usedBytes)} / 15 MB</span></div></header>
+  <details className="composer-card"><summary><span><UploadCloud size={18}/>Simpan dokumen</span><small>PDF, JPG, PNG, WEBP · maksimal 5 MB</small></summary><form action={upload} className="editor-form"><input ref={input} className="input span-2" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" required/><select className="input span-2" name="category" defaultValue="vendor"><option value="vendor">Vendor Contract</option>{canBudget&&<option value="invoice">Invoice</option>}{canBudget&&<option value="receipt">Receipt</option>}<option value="rundown">Rundown</option><option value="floorplan">Floorplan</option><option value="other">Other</option></select><button className="btn btn-primary span-2" disabled={busy}>{busy?"Menyimpan...":"Simpan ke Vault"}</button></form></details>
+  {error&&<div className="notice">{error}</div>}
+  <div className="vault-groups">{groups.map(group=>{const items=documents.filter(d=>d.category===group);if(!items.length)return null;return <section className="vault-group" key={group}><div className="vault-group-title"><span>{group}</span><b>{items.length}</b></div><div className="vault-grid">{items.map(d=><details className="vault-file" key={d.id}><summary><FileText size={20}/><div className="item-main"><b>{d.name}</b><span>{fmt(Number(d.size_bytes||0))}</span></div></summary><div className="vault-actions"><a className="btn btn-primary btn-sm" href={"/api/documents/"+d.id} target="_blank">Buka dokumen</a><form action={deleteDocument}><input type="hidden" name="id" value={d.id}/><button className="text-danger">Hapus</button></form></div></details>)}</div></section>})}</div>
+  {!documents.length&&<div className="calm-empty"><FolderLock size={27}/><span>Vault masih kosong.</span></div>}
+ </section>
 }

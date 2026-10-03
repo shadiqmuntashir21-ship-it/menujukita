@@ -1,46 +1,15 @@
 import crypto from "node:crypto";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { auth,authConfigured } from "@/lib/auth/server";
-import { sql } from "@/lib/db";
+import { getWorkspaceContext } from "@/lib/workspace";
 import { ALLOWED_FILE_TYPES,MAX_FILE_BYTES,MAX_WORKSPACE_BYTES,STORAGE_BUCKET,storageClient } from "@/lib/storage";
-
 export async function POST(req:Request){
-  if(!authConfigured)return Response.json({error:"server_not_configured"},{status:503});
-  const {data:session}=await auth.getSession();
-  if(!session?.user)return Response.json({error:"unauthorized"},{status:401});
-
-  const body=await req.json().catch(()=>null) as any;
-  const name=String(body?.name||"").trim();
-  const type=String(body?.type||"");
-  const size=Number(body?.size||0);
-  const category=String(body?.category||"other");
-  const weddingId=String(body?.weddingId||"");
-  if(!weddingId)return Response.json({error:"workspace_not_found"},{status:403});
-
-  const db=sql();
-  const rows=await db`SELECT w.id,m.role,m.can_view_budget FROM weddings w
-    JOIN wedding_members m ON m.wedding_id=w.id
-    JOIN licenses l ON l.wedding_id=w.id
-    WHERE w.id=${weddingId}
-      AND m.auth_user_id=${session.user.id}
-      AND m.status='active'
-      AND w.status='active'
-      AND l.status='active'
-    LIMIT 1`;
-  if(!rows[0])return Response.json({error:"workspace_not_found"},{status:403});
-  if(String(rows[0].role)==="viewer")return Response.json({error:"read_only"},{status:403});
-
-  const canBudget=["owner","partner"].includes(String(rows[0].role))||Boolean(rows[0].can_view_budget);
-  if(["invoice","receipt"].includes(category)&&!canBudget)return Response.json({error:"budget_access_denied"},{status:403});
-  if(!name||!ALLOWED_FILE_TYPES.has(type)||size<=0||size>MAX_FILE_BYTES)return Response.json({error:"invalid_file"},{status:400});
-
-  const [usage]=await db`SELECT coalesce(sum(size_bytes),0)::bigint used FROM documents WHERE wedding_id=${weddingId}`;
-  if(Number(usage.used)+size>MAX_WORKSPACE_BYTES)return Response.json({error:"workspace_quota"},{status:413});
-
-  const safe=name.replace(/[^a-zA-Z0-9._-]+/g,"-").slice(-90)||"file";
-  const key=`weddings/${weddingId}/${crypto.randomUUID()}-${safe}`;
-  const command=new PutObjectCommand({Bucket:STORAGE_BUCKET,Key:key,ContentType:type,ContentLength:size});
-  const url=await getSignedUrl(storageClient(),command,{expiresIn:300});
-  return Response.json({url,key});
+ const ctx:any=await getWorkspaceContext();if(!ctx?.wedding)return Response.json({error:"unauthorized"},{status:401});
+ const body=await req.json().catch(()=>null) as any,name=String(body?.name||"").trim(),type=String(body?.type||""),size=Number(body?.size||0),category=String(body?.category||"other");
+ if(String(body?.weddingId||"")!==String(ctx.wedding.id))return Response.json({error:"workspace_not_found"},{status:403});
+ if(!name||!ALLOWED_FILE_TYPES.has(type)||size<=0||size>MAX_FILE_BYTES)return Response.json({error:"invalid_file"},{status:400});
+ const[usage]=await ctx.db`SELECT coalesce(sum(size_bytes),0)::bigint used FROM documents WHERE wedding_id=${ctx.wedding.id}`;if(Number(usage.used)+size>MAX_WORKSPACE_BYTES)return Response.json({error:"workspace_quota"},{status:413});
+ const safe=name.replace(/[^a-zA-Z0-9._-]+/g,"-").slice(-90)||"file",key=`weddings/${ctx.wedding.id}/${crypto.randomUUID()}-${safe}`;
+ const url=await getSignedUrl(storageClient(),new PutObjectCommand({Bucket:STORAGE_BUCKET,Key:key,ContentType:type,ContentLength:size}),{expiresIn:300});
+ return Response.json({url,key,category});
 }

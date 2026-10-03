@@ -1,7 +1,24 @@
-import{CalendarDays,CircleDollarSign,HeartPulse,ListChecks,Sparkles,UsersRound,WalletCards,CheckCircle2}from"lucide-react";import{money,dateLabel}from"./shared";
-export default function HomeSection({wedding,metrics,priorities,payments,canBudget}:{wedding:any;metrics:any;priorities:any[];payments:any[];canBudget:boolean}){return <section id="home" className="module-stack">
-<div className="dashboard-hero"><div><small>WEDDING COUNTDOWN</small><h2>{metrics.days} hari menuju hari kalian</h2><p style={{opacity:.82}}>MenujuKita memilih hal yang paling perlu perhatian sekarang.</p></div><div className="health"><div><b>{metrics.health}</b><br/><small>{metrics.healthLabel}</small></div></div></div>
-<div className="dashboard-grid"><div className="panel metric-card"><ListChecks size={18}/><small className="muted">Progress</small><div className="big">{metrics.progress}%</div><div className="progress"><span style={{width:metrics.progress+"%"}}/></div></div>{canBudget?<div className="panel metric-card"><WalletCards size={18}/><small className="muted">Budget</small><div className="big">{money(wedding.budget_total)}</div><small className="muted">{money(metrics.paid)} terbayar</small></div>:<div className="panel metric-card"><CalendarDays size={18}/><small className="muted">Countdown</small><div className="big">{metrics.days}</div><small className="muted">hari menuju wedding</small></div>}<div className="panel metric-card"><UsersRound size={18}/><small className="muted">Tamu hadir</small><div className="big">{metrics.confirmedPax}</div><small className="muted">target {wedding.guest_target||0}</small></div>{canBudget?<div className="panel metric-card"><CircleDollarSign size={18}/><small className="muted">Safe to Spend</small><div className="big">{money(metrics.safeToSpend)}</div><small className="muted">setelah komitmen + buffer</small></div>:<div className="panel metric-card"><HeartPulse size={18}/><small className="muted">Wedding Health</small><div className="big">{metrics.health}/100</div><small className="muted">{metrics.healthLabel}</small></div>}</div>
-<div className="content-grid"><div className="panel"><div className="module-head"><div><small className="muted">WHAT SHOULD I DO NEXT?</small><h3>Prioritas berikutnya</h3></div><Sparkles size={20}/></div>{priorities.length?<div className="list">{priorities.slice(0,5).map((p,i)=><div className="row priority-row" key={p.title+i}><span className="priority-number">{String(i+1).padStart(2,"0")}</span><div style={{flex:1}}><div className="row-title">{p.title}</div><small>{p.meta}</small></div><span className="badge">{p.kind}</span></div>)}</div>:<div className="empty-state"><CheckCircle2 size={28}/><b>Tidak ada hal mendesak.</b><span className="muted">Persiapan kalian terlihat terkendali.</span></div>}</div>
-<aside className="panel"><div className="module-head"><h3>Wedding Health</h3><HeartPulse size={20}/></div><b>{metrics.health}/100 · {metrics.healthLabel}</b><p className="muted">Dihitung dari checklist, vendor, kesiapan tamu{canBudget?", budget, dan payment":"; komponen finansial disembunyikan sesuai permission"}.</p><hr className="divider"/>{canBudget?<><h3>Pembayaran terdekat</h3><div className="list">{payments.slice(0,3).map(p=><div key={p.id}><b>{p.description}</b><div className="muted" style={{fontSize:13}}>{money(p.amount)} · {dateLabel(p.due_date)}</div></div>)}</div></>:<div className="empty-mini">Budget dan payment hanya terlihat untuk member yang mendapat akses.</div>}</aside></div>
-</section>}
+import { CheckCircle2,HeartPulse,Sparkles } from "lucide-react";
+import { money,dateLabel } from "./shared";
+export default function HomeSection({wedding,metrics,priorities,payments}:{wedding:any;metrics:any;priorities:any[];payments:any[]}){
+ const first=priorities.slice(0,4);
+ return <section id="home" className="studio-home">
+  <div className="home-editorial">
+   <div><span className="micro-label">GOOD TO SEE YOU</span><h1 className="serif">{wedding.couple_one_name} <em>&</em> {wedding.couple_two_name}</h1><p>{metrics.days===0?"Hari yang kalian tunggu akhirnya tiba.":<><strong>{metrics.days} hari</strong> menuju hari kalian. Fokuskan energi ke hal yang benar-benar perlu dibereskan sekarang.</>}</p></div>
+   <div className="health-orbit" style={{"--health":metrics.health} as any}><div><b>{metrics.health}</b><span>Wedding Health</span><small>{metrics.healthLabel}</small></div></div>
+  </div>
+
+  <div className="attention-layout">
+   <section className="attention-card"><div className="section-kicker"><Sparkles size={17}/><span>WHAT NEEDS YOUR ATTENTION</span></div>
+    {first.length?<div className="attention-list">{first.map((p,i)=><div className="attention-row" key={p.title+i}><span className="attention-index">{String(i+1).padStart(2,"0")}</span><span className="attention-copy"><b>{p.title}</b><small>{p.meta}</small></span><span className={"attention-kind kind-"+String(p.kind).toLowerCase()}>{p.kind}</span></div>)}</div>:<div className="calm-empty"><CheckCircle2 size={27}/><div><b>Semuanya terlihat terkendali.</b><span>Tidak ada hal mendesak yang perlu perhatian sekarang.</span></div></div>}
+   </section>
+   <aside className="today-stack">
+    <div className="studio-stat safe-focus"><small>SAFE TO SPEND</small><strong>{money(metrics.safeToSpend)}</strong><span>setelah paid, committed & buffer</span></div>
+    <div className="studio-stat"><small>PROGRESS</small><strong>{metrics.progress}%</strong><div className="studio-progress"><span style={{width:metrics.progress+"%"}}/></div><span>{metrics.bookedVendors} vendor secured · {metrics.confirmedPax} pax confirmed</span></div>
+    <div className="studio-stat compact-stat"><div><HeartPulse size={17}/><small>PAYMENT TERDEKAT</small></div>{payments.filter((p:any)=>p.status!=="paid"&&p.status!=="cancelled").slice(0,2).map((p:any)=><p key={p.id}><b>{p.description}</b><span>{money(p.amount)} · {dateLabel(p.due_date)}</span></p>)}</div>
+   </aside>
+  </div>
+
+  <div className="journey-glance"><div><small>YOUR JOURNEY</small><b>Foundation</b></div><span/><div><small>NOW</small><b>Planning</b></div><span/><div><small>NEXT</small><b>Guests</b></div><span/><div><small>FINISH</small><b>Day-H</b></div></div>
+ </section>
+}

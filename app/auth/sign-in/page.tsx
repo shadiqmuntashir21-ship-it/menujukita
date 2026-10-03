@@ -1,2 +1,1 @@
-import SignInForm from "./form";
-export default async function Page({searchParams}:{searchParams:Promise<{next?:string}>}){const q=await searchParams;return <SignInForm next={q.next||"/app"}/>}
+import SignInForm from "./form";export default function Page(){return <SignInForm/>}

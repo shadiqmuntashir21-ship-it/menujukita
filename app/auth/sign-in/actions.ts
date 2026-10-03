@@ -1,15 +1,18 @@
 "use server";
-import { auth,authConfigured } from "@/lib/auth/server";
 import { redirect } from "next/navigation";
-
-const safeNext=(v:string)=>v.startsWith("/join/")||v==="/app"?v:"/app";
-
-export async function signIn(_:{error:string}|null,f:FormData){
-  if(!authConfigured)return{error:"Server MenujuKita belum selesai dikonfigurasi. Coba lagi setelah environment production aktif."};
-  const {error}=await auth.signIn.email({
-    email:String(f.get("email")||""),
-    password:String(f.get("password")||"")
-  });
-  if(error)return{error:error.message||"Gagal masuk"};
-  redirect(safeNext(String(f.get("next")||"/app")));
+import { sql } from "@/lib/db";
+import { createLicenseSession,logAccess,rateLimit,sha256,verifyPin } from "@/lib/session";
+type State={error?:string};
+export async function signIn(_prev:State|null,f:FormData):Promise<State>{
+  const code=String(f.get("license")||"").trim().toUpperCase().replace(/\s+/g,""),pin=String(f.get("pin")||"").trim();
+  if(!/^MK-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)||!/^[0-9]{4,8}$/.test(pin))return{error:"Periksa kembali Kode Lisensi dan PIN."};
+  if(!process.env.DATABASE_URL)return{error:"Server MenujuKita belum terhubung ke database."};
+  if(!await rateLimit("license-login:"+sha256(code),8))return{error:"Terlalu banyak percobaan. Coba lagi sekitar 15 menit."};
+  const db=sql(),rows=await db`SELECT id,status,wedding_id,pin_hash,pin_salt FROM licenses WHERE code_hash=${sha256(code)} LIMIT 1`,license:any=rows[0];
+  const valid=license?.pin_hash&&license?.pin_salt&&verifyPin(pin,String(license.pin_salt),String(license.pin_hash));
+  if(!valid){await logAccess({actorType:"license",licenseId:license?.id||null,event:"login_failed",success:false});return{error:license&&!license.pin_hash?"PIN lisensi belum dibuat. Hubungi Admin MenujuKita.":"Kode Lisensi atau PIN tidak cocok."}}
+  if(["revoked","expired"].includes(String(license.status)))return{error:"Lisensi ini sudah tidak aktif. Hubungi Teman Digital."};
+  if(license.status==="suspended")return{error:"Lisensi sedang ditangguhkan. Hubungi Teman Digital."};
+  await createLicenseSession(String(license.id));await db`UPDATE licenses SET last_login_at=now() WHERE id=${license.id}`;
+  await logAccess({actorType:"license",licenseId:String(license.id),event:"login_success"});redirect(license.wedding_id?"/app":"/onboarding");
 }

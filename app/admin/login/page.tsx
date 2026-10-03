@@ -1,0 +1,1 @@
+import AdminLoginForm from "./form";export default function Page(){return <AdminLoginForm/>}

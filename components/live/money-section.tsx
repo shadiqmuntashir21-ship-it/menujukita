@@ -1,49 +1,21 @@
-import { X } from "lucide-react";
-import { addBudgetItem,deleteBudgetItem,updateFunds,addPayment,markPaymentPaid,deletePayment } from "@/app/app/actions";
-import { money,dateLabel,labels } from "./shared";
-
-export default function MoneySection({wedding,metrics,budgetItems,payments,vendors,canEdit}:{wedding:any;metrics:any;budgetItems:any[];payments:any[];vendors:any[];canEdit:boolean}){
-  return <section id="money" className="module-stack">
-    <div className="dashboard-grid">
-      <div className="panel"><small className="muted">Total Budget</small><div className="big">{money(wedding.budget_total)}</div></div>
-      <div className="panel"><small className="muted">Planned</small><div className="big">{money(metrics.planned)}</div></div>
-      <div className="panel"><small className="muted">Paid</small><div className="big">{money(metrics.paid)}</div></div>
-      <div className="panel safe-card"><small>Safe to Spend</small><div className="big">{money(metrics.safeToSpend)}</div></div>
-    </div>
-
-    <div className="content-grid">
-      <div className="panel"><h3>Pengaturan dana wedding</h3>{canEdit?<form action={updateFunds} className="form-grid">
-        <label className="field"><span>Total budget</span><input className="input" name="budget_total" type="number" min="0" defaultValue={Number(wedding.budget_total||0)}/></label>
-        <label className="field"><span>Dana wedding yang dialokasikan</span><input className="input" name="available_funds" type="number" min="0" defaultValue={Number(wedding.available_funds||0)}/></label>
-        <label className="field"><span>Buffer yang dijaga</span><input className="input" name="reserve_buffer" type="number" min="0" defaultValue={Number(wedding.reserve_buffer||0)}/></label>
-        <button className="btn btn-primary">Simpan Dana</button>
-      </form>:<div className="formula-box"><span>Total budget</span><strong>{money(wedding.budget_total)}</strong><span>Dana dialokasikan: {money(wedding.available_funds)}</span><span>Buffer: {money(wedding.reserve_buffer)}</span></div>}</div>
-      <aside className="panel"><h3>Cara Safe to Spend dihitung</h3><p className="muted">Dana wedding yang dialokasikan dikurangi pembayaran yang sudah dibayar, komitmen yang belum lunas, dan buffer.</p><div className="formula-box"><span>{money(wedding.available_funds||wedding.budget_total)}</span><b>− {money(metrics.paid)} sudah dibayar</b><b>− {money(metrics.committed)} committed</b><b>− {money(wedding.reserve_buffer)} buffer</b><strong>= {money(metrics.safeToSpend)}</strong></div></aside>
-    </div>
-
-    <div className="panel">
-      <div className="module-head"><div><small className="muted">CONNECTED BUDGET</small><h3>Budget items</h3></div><span className="badge">{budgetItems.length} item</span></div>
-      {canEdit&&<form action={addBudgetItem} className="money-create-form">
-        <input className="input" name="name" placeholder="Mis. Paket catering" required/>
-        <select className="input" name="vendor_id" defaultValue=""><option value="">Tanpa vendor</option>{vendors.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select>
-        <input className="input compact" name="planned_amount" type="number" min="0" placeholder="Rencana"/>
-        <input className="input compact" name="actual_amount" type="number" min="0" placeholder="Aktual"/>
-        <input className="input compact" name="paid_amount" type="number" min="0" placeholder="Terbayar"/>
-        <button className="btn btn-primary btn-sm">Tambah</button>
-      </form>}
-      <div className="table-wrap"><table className="clean-table"><thead><tr><th>Item</th><th>Vendor</th><th>Rencana</th><th>Aktual</th><th>Terbayar</th>{canEdit&&<th></th>}</tr></thead><tbody>{budgetItems.length?budgetItems.map(b=><tr key={b.id}><td>{b.name}</td><td>{b.vendor_name||"—"}</td><td>{money(b.planned_amount)}</td><td>{money(b.actual_amount)}</td><td>{money(b.paid_amount)}</td>{canEdit&&<td><form action={deleteBudgetItem}><input type="hidden" name="id" value={b.id}/><button className="icon-button danger"><X size={15}/></button></form></td>}</tr>):<tr><td colSpan={canEdit?6:5} className="muted">Belum ada budget item.</td></tr>}</tbody></table></div>
-    </div>
-
-    <div className="panel">
-      <div className="module-head"><div><small className="muted">PAYMENT TRACKER</small><h3>Jadwal pembayaran</h3></div>{metrics.overduePayments>0&&<span className="badge badge-danger">{metrics.overduePayments} overdue</span>}</div>
-      {canEdit&&<form action={addPayment} className="payment-create-form">
-        <input className="input" name="description" placeholder="Mis. DP Fotografer" required/>
-        <select className="input" name="vendor_id" defaultValue=""><option value="">Tanpa vendor</option>{vendors.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select>
-        <input className="input compact" name="amount" type="number" min="1" placeholder="Nominal" required/>
-        <input className="input compact" name="due_date" type="date"/>
-        <button className="btn btn-primary btn-sm">Tambah</button>
-      </form>}
-      <div className="list">{payments.length?payments.map(p=><div className="row" key={p.id}><div className="row-grow"><div className="row-title">{p.description}</div><small>{p.vendor_name?p.vendor_name+" · ":""}{money(p.amount)} · {dateLabel(p.due_date)}</small></div><span className={"badge "+(p.status==="overdue"?"badge-danger":"")}>{labels[p.status]||p.status}</span>{canEdit&&<><form action={markPaymentPaid}><input type="hidden" name="id" value={p.id}/><button className="btn btn-sm">{p.status==="paid"?"Batalkan Lunas":"Tandai Lunas"}</button></form><form action={deletePayment}><input type="hidden" name="id" value={p.id}/><button className="icon-button danger"><X size={16}/></button></form></>}</div>):<div className="empty-state"><b>Belum ada payment.</b><span className="muted">Hubungkan pembayaran ke vendor agar prioritas otomatis lebih akurat.</span></div>}</div>
-    </div>
-  </section>;
+import { Plus,WalletCards } from "lucide-react";
+import { addBudgetItem,addPayment,deleteBudgetItem,deletePayment,updateBudgetItem,updateFunds,updatePayment } from "@/app/app/actions";
+import { dateLabel,money,labels } from "./shared";
+const inputDate=(v:any)=>v?String(v).slice(0,10):"";
+export default function MoneySection({wedding,metrics,budgetItems,payments,vendors}:{wedding:any;metrics:any;budgetItems:any[];payments:any[];vendors:any[];canEdit:boolean}){
+ return <section id="money" className="module-stack">
+  <header className="module-editorial-head"><div><span className="micro-label">MONEY</span><h2 className="serif">Wedding Wallet</h2><p>Budget yang mudah dibaca, komitmen yang kelihatan, dan angka yang benar-benar membantu keputusan.</p></div><WalletCards size={28}/></header>
+  <div className="wallet-hero"><div><small>SAFE TO SPEND</small><strong>{money(metrics.safeToSpend)}</strong><span>Dana yang masih aman setelah pembayaran, komitmen, dan buffer.</span></div><div className="wallet-metrics"><p><small>Total Budget</small><b>{money(wedding.budget_total)}</b></p><p><small>Paid</small><b>{money(metrics.paid)}</b></p><p><small>Committed</small><b>{money(metrics.committed)}</b></p><p><small>Buffer</small><b>{money(wedding.reserve_buffer)}</b></p></div></div>
+  <details className="composer-card"><summary><span>Atur dana wedding</span><small>Total dana dan buffer pengaman</small></summary><form action={updateFunds} className="editor-form"><label className="field"><span>Total Budget</span><input className="input" name="budget_total" type="number" min="0" defaultValue={Number(wedding.budget_total||0)}/></label><label className="field"><span>Dana Dialokasikan</span><input className="input" name="available_funds" type="number" min="0" defaultValue={Number(wedding.available_funds||0)}/></label><label className="field span-2"><span>Buffer yang dijaga</span><input className="input" name="reserve_buffer" type="number" min="0" defaultValue={Number(wedding.reserve_buffer||0)}/></label><button className="btn btn-primary span-2">Simpan Dana</button></form></details>
+  <div className="two-column-studio">
+   <section className="studio-panel clean-list-panel"><div className="panel-heading"><div><small>BUDGET PLAN</small><h3>Alokasi</h3></div><span>{budgetItems.length} item</span></div>
+    <details className="inline-composer"><summary><Plus size={16}/> Tambah alokasi</summary><form action={addBudgetItem} className="editor-form"><input className="input span-2" name="name" placeholder="Mis. Catering" required/><select className="input span-2" name="vendor_id" defaultValue=""><option value="">Tanpa vendor</option>{vendors.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select><input className="input" name="planned_amount" type="number" min="0" placeholder="Rencana"/><input className="input" name="actual_amount" type="number" min="0" placeholder="Aktual"/><input className="input" name="paid_amount" type="number" min="0" placeholder="Terbayar"/><input className="input" name="due_date" type="date"/><textarea className="input span-2" name="notes" placeholder="Catatan"/><button className="btn btn-primary span-2">Tambah</button></form></details>
+    <div className="studio-list">{budgetItems.map(b=><details className="studio-item" key={b.id}><summary><div className="item-main"><b>{b.name}</b><span>{b.vendor_name||"Tanpa vendor"} · {money(b.paid_amount)} paid</span></div><strong>{money(b.actual_amount||b.planned_amount)}</strong></summary><div className="item-editor"><form action={updateBudgetItem} className="editor-form"><input type="hidden" name="id" value={b.id}/><input className="input span-2" name="name" defaultValue={b.name} required/><select className="input span-2" name="vendor_id" defaultValue={b.vendor_id||""}><option value="">Tanpa vendor</option>{vendors.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select><input className="input" name="planned_amount" type="number" min="0" defaultValue={Number(b.planned_amount||0)}/><input className="input" name="actual_amount" type="number" min="0" defaultValue={Number(b.actual_amount||0)}/><input className="input" name="paid_amount" type="number" min="0" defaultValue={Number(b.paid_amount||0)}/><input className="input" name="due_date" type="date" defaultValue={inputDate(b.due_date)}/><textarea className="input span-2" name="notes" defaultValue={b.notes||""}/><button className="btn btn-primary span-2">Simpan</button></form><form action={deleteBudgetItem} className="danger-zone"><input type="hidden" name="id" value={b.id}/><button className="text-danger">Hapus alokasi</button></form></div></details>)}</div>
+   </section>
+   <section className="studio-panel clean-list-panel"><div className="panel-heading"><div><small>PAYMENTS</small><h3>Jadwal pembayaran</h3></div>{metrics.overduePayments>0&&<span className="attention-chip">{metrics.overduePayments} overdue</span>}</div>
+    <details className="inline-composer"><summary><Plus size={16}/> Tambah pembayaran</summary><form action={addPayment} className="editor-form"><input className="input span-2" name="description" placeholder="Mis. DP Fotografer" required/><select className="input span-2" name="vendor_id" defaultValue=""><option value="">Tanpa vendor</option>{vendors.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select><input className="input" name="amount" type="number" min="1" placeholder="Nominal" required/><input className="input" name="due_date" type="date"/><input className="input span-2" name="payment_method" placeholder="Metode pembayaran"/><textarea className="input span-2" name="notes" placeholder="Catatan"/><button className="btn btn-primary span-2">Tambah payment</button></form></details>
+    <div className="studio-list">{payments.map(p=><details className="studio-item" key={p.id}><summary><div className="item-main"><b>{p.description}</b><span>{p.vendor_name||"Tanpa vendor"} · {dateLabel(p.due_date)}</span></div><div className="item-right"><strong>{money(p.amount)}</strong><span className={"status-dot status-"+p.status}>{labels[p.status]||p.status}</span></div></summary><div className="item-editor"><form action={updatePayment} className="editor-form"><input type="hidden" name="id" value={p.id}/><input className="input span-2" name="description" defaultValue={p.description} required/><select className="input span-2" name="vendor_id" defaultValue={p.vendor_id||""}><option value="">Tanpa vendor</option>{vendors.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select><input className="input" name="amount" type="number" min="1" defaultValue={Number(p.amount)}/><input className="input" name="due_date" type="date" defaultValue={inputDate(p.due_date)}/><select className="input" name="status" defaultValue={p.status==="overdue"?"upcoming":p.status}><option value="upcoming">Upcoming</option><option value="paid">Paid</option><option value="cancelled">Cancelled</option></select><input className="input" name="payment_method" defaultValue={p.payment_method||""} placeholder="Metode"/><textarea className="input span-2" name="notes" defaultValue={p.notes||""}/><button className="btn btn-primary span-2">Simpan</button></form><form action={deletePayment} className="danger-zone"><input type="hidden" name="id" value={p.id}/><button className="text-danger">Hapus pembayaran</button></form></div></details>)}</div>
+   </section>
+  </div>
+ </section>
 }

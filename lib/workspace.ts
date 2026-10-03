@@ -1,72 +1,36 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth/server";
 import { sql } from "@/lib/db";
+import { getAdminSession,getAdminWorkspace,getLicenseSession } from "@/lib/session";
 
-export async function requireWorkspace() {
-  const { data: session } = await auth.getSession();
-  if (!session?.user) redirect("/auth/sign-in");
-  const db = sql();
-  const jar=await cookies();
-  const preferred=jar.get("menujukita_active_wedding")?.value||"";
-
-  if(preferred){
-    const rows=await db`
-      SELECT w.*,m.role,m.can_view_budget,l.status license_status
-      FROM weddings w
-      JOIN wedding_members m ON m.wedding_id=w.id
-      JOIN licenses l ON l.wedding_id=w.id
-      WHERE w.id=${preferred}
-        AND m.auth_user_id=${session.user.id}
-        AND m.status='active'
-        AND w.status='active'
-        AND l.status='active'
-      LIMIT 1
-    `;
-    if(rows[0]) return {db,session,wedding:rows[0] as any};
+export async function getWorkspaceContext(){
+  if(!process.env.DATABASE_URL)return null;
+  const db=sql(),admin=await getAdminSession();
+  if(admin){
+    const id=await getAdminWorkspace();
+    if(id){
+      const rows=await db`SELECT w.*,l.status license_status,'owner'::text role,true can_view_budget
+        FROM weddings w LEFT JOIN licenses l ON l.wedding_id=w.id WHERE w.id=${id} AND w.status='active' LIMIT 1`;
+      if(rows[0])return {db,wedding:rows[0] as any,session:{user:{id:"admin",name:"MenujuKita Admin",email:null}},admin:true,license:null};
+    }
   }
-
-  const rows=await db`
-    SELECT w.*,m.role,m.can_view_budget,l.status license_status
-    FROM weddings w
-    JOIN wedding_members m ON m.wedding_id=w.id
-    JOIN licenses l ON l.wedding_id=w.id
-    WHERE m.auth_user_id=${session.user.id}
-      AND m.status='active'
-      AND w.status='active'
-      AND l.status='active'
-    ORDER BY CASE m.role WHEN 'owner' THEN 0 WHEN 'partner' THEN 1 WHEN 'collaborator' THEN 2 ELSE 3 END,w.created_at DESC
-    LIMIT 1
-  `;
-  if(rows[0]) return {db,session,wedding:rows[0] as any};
-
-  const blocked=await db`
-    SELECT w.id,l.status license_status
-    FROM weddings w
-    JOIN wedding_members m ON m.wedding_id=w.id
-    LEFT JOIN licenses l ON l.wedding_id=w.id
-    WHERE m.auth_user_id=${session.user.id}
-      AND m.status='active'
-      AND w.status='active'
-    ORDER BY w.created_at DESC
-    LIMIT 1
-  `;
-  if(blocked[0])redirect("/license-status");
-  redirect("/onboarding");
+  const license=await getLicenseSession();
+  if(!license)return null;
+  const actor=`license:${license.license_id}`;
+  if(!license.wedding_id)return {db,wedding:null,session:{user:{id:actor,name:"MenujuKita User",email:null}},admin:false,license};
+  const rows=await db`SELECT w.*,l.status license_status,'owner'::text role,true can_view_budget
+    FROM weddings w JOIN licenses l ON l.wedding_id=w.id WHERE w.id=${license.wedding_id} AND l.id=${license.license_id} AND w.status='active' LIMIT 1`;
+  return {db,wedding:(rows[0]||null) as any,session:{user:{id:actor,name:rows[0]?`${rows[0].couple_one_name} & ${rows[0].couple_two_name}`:"MenujuKita User",email:null}},admin:false,license};
 }
-
-export function canViewBudget(wedding:any){
-  return ["owner","partner"].includes(String(wedding.role))||Boolean(wedding.can_view_budget);
-}
-
-export async function requireEditor(){
-  const ctx=await requireWorkspace();
-  if(!["owner","partner","collaborator"].includes(String(ctx.wedding.role)))throw new Error("Read-only workspace");
+export async function requireWorkspace(){
+  const ctx:any=await getWorkspaceContext();
+  if(!ctx)redirect("/auth/sign-in");
+  if(!ctx.wedding){
+    if(["suspended","expired","revoked"].includes(String(ctx.license?.status)))redirect("/license-status");
+    redirect("/onboarding");
+  }
+  if(!ctx.admin&&ctx.license?.status!=="active")redirect("/license-status");
   return ctx;
 }
-
-export async function requireBudgetAccess(){
-  const ctx=await requireEditor();
-  if(!canViewBudget(ctx.wedding))throw new Error("Budget access denied");
-  return ctx;
-}
+export function canViewBudget(_wedding:any){return true}
+export async function requireEditor(){return requireWorkspace()}
+export async function requireBudgetAccess(){return requireWorkspace()}
