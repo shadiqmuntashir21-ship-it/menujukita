@@ -29,8 +29,8 @@ export async function confirmPayment(formData:FormData){
   )
   UPDATE orders o SET status='payment_verified',verified_at=now(),license_id=(SELECT id FROM made),license_code=${code},updated_at=now()
   WHERE o.id IN(SELECT id FROM target) RETURNING o.*`;
- let final:any=rows[0];
- if(!final){final=(await db`SELECT * FROM orders WHERE id=${id} LIMIT 1`)[0];if(!final)return}
+ const final:any=rows[0];
+ if(!final){refresh(id);return}
  await addOrderActivity(db,id,"payment_verified",{licenseId:final.license_id||licenseId});
  await logAccess({actorType:"admin",licenseId:String(final.license_id||licenseId),event:"order_payment_verified",metadata:{orderId:id}});
  const sent=await sendAccessEmail(db,{...order,...final},final.license_code||code,pin,false);
