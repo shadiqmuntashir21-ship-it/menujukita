@@ -32,7 +32,7 @@ export default async function Checkout({searchParams}:{searchParams:Promise<{err
     </div>
     <div className="checkout-section-head payment-head"><small>02 · PEMBAYARAN</small><h2>Pilih cara bayar.</h2><p>Semua metode diverifikasi manual oleh owner Teman Digital.</p></div>
     <PaymentMethods methods={methods as any[]}/>
-    {q.error&&<div className="notice">{q.error==="payment"?"Metode pembayaran tidak tersedia. Pilih metode lain.":"Periksa kembali nama, email, dan WhatsApp."}</div>}
+    {q.error&&<div className="notice">{q.error==="payment"?"Metode pembayaran tidak tersedia. Pilih metode lain.":q.error==="limit"?"Terlalu banyak order dibuat. Coba lagi sekitar 15 menit.":"Periksa kembali nama, email, dan WhatsApp."}</div>}
     <button className="checkout-submit">Lanjut ke pembayaran · {rupiah(MENUJUKITA_PRICE)}</button>
     <p className="checkout-privacy">Dengan melanjutkan, data digunakan hanya untuk pemrosesan order, verifikasi pembayaran, pengiriman lisensi, dan dukungan transaksi MenujuKita.</p>
    </form>
