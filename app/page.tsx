@@ -24,7 +24,7 @@ export default function Home(){
     <span className="mk-kicker">WEDDING PLANNING, BUT CALMER.</span>
     <h1>Semua detail menuju<br/><em>hari kalian.</em></h1>
     <p>Checklist, budget, tamu, vendor, timeline, dokumen, sampai Hari-H—dirapikan dalam satu ruang yang terasa personal, bukan seperti dashboard kantor.</p>
-    <div className="mk-hero-actions"><Link className="mk-button mk-button-light" href="/demo">Coba Demo Tanpa Daftar <ArrowRight size={17}/></Link><a className="mk-button mk-button-glass" href="#harga">Mulai Rp49.000</a></div>
+    <div className="mk-hero-actions"><Link className="mk-button mk-button-light" href="/demo">Coba Demo Tanpa Daftar <ArrowRight size={17}/></Link><Link className="mk-button mk-button-glass" href="/checkout">Beli Rp49.000</Link></div>
    </div>
 
    <div className="mk-feature-ribbon">
@@ -54,12 +54,12 @@ export default function Home(){
 
   <section className="mk-how" id="cara-kerja">
    <div className="mk-section-head"><div><span className="mk-kicker dark">SIMPLE FLOW</span><h2>Dari beli akses sampai Hari-H.</h2></div></div>
-   <div className="mk-steps"><article><b>01</b><h3>Dapatkan akses</h3><p>Setelah pembelian, kalian menerima Kode Lisensi + PIN.</p></article><article><b>02</b><h3>Setup wedding</h3><p>Isi nama pasangan, tanggal, budget, target tamu, dan foto favorit kalian.</p></article><article><b>03</b><h3>Plan together</h3><p>Kelola persiapan dari satu wedding workspace yang sama.</p></article><article><b>04</b><h3>Enjoy the day</h3><p>Masuk ke Day-H Mode dan fokus menjalankan rundown.</p></article></div>
+   <div className="mk-steps"><article><b>01</b><h3>Checkout & bayar</h3><p>Pilih QRIS, BRI, Mandiri, BSI, Bank Sulteng, atau GoPay.</p></article><article><b>02</b><h3>Owner verifikasi</h3><p>Setelah transfer, klik Saya Sudah Membayar. Owner mengecek dana masuk secara manual.</p></article><article><b>03</b><h3>Terima akses</h3><p>Kode Lisensi MK-XXXX-XXXX + PIN dikirim otomatis ke email setelah pembayaran terverifikasi.</p></article><article><b>04</b><h3>Plan & enjoy</h3><p>Setup wedding workspace, rencanakan semuanya, lalu gunakan Day-H Mode.</p></article></div>
   </section>
 
   <section className="mk-pricing" id="harga">
    <div><span className="mk-kicker">PILOT OFFER</span><h2>Satu harga.<br/>Satu wedding workspace.</h2><p>Seluruh fitur inti tersedia dalam satu lisensi pilot. Tidak ada tier yang bikin bingung.</p></div>
-   <article><small>PROMO PILOT</small><div className="mk-price"><span>Rp</span><strong>49.000</strong></div><p>Satu kali bayar untuk satu wedding workspace.</p><div className="mk-price-list">{["Checklist & Timeline","Budget + Safe to Spend","Guest & RSVP","Vendor & Payments","Visual Seating","Private Vault","Wedding Health","Day-H Mode"].map(x=><span key={x}><Check size={14}/>{x}</span>)}</div><Link className="mk-button mk-button-dark" href="/auth/sign-in">Sudah punya akses? Masuk <ArrowRight size={16}/></Link><small>Maksimal 250 wedding aktif pada fase pilot.</small></article>
+   <article><small>PROMO PILOT</small><div className="mk-price"><span>Rp</span><strong>49.000</strong></div><p>Satu kali bayar untuk satu wedding workspace.</p><div className="mk-price-list">{["Checklist & Timeline","Budget + Safe to Spend","Guest & RSVP","Vendor & Payments","Visual Seating","Private Vault","Wedding Health","Day-H Mode"].map(x=><span key={x}><Check size={14}/>{x}</span>)}</div><Link className="mk-button mk-button-dark" href="/checkout">Beli MenujuKita — Rp49.000 <ArrowRight size={16}/></Link><Link className="mk-login-under-price" href="/auth/sign-in">Sudah punya akses? Masuk di sini</Link><small>Maksimal 250 wedding aktif pada fase pilot.</small></article>
   </section>
 
   <section className="mk-final-cta"><Sparkles size={22}/><h2>Persiapannya serius.<br/><em>Rasanya tetap harus menyenangkan.</em></h2><Link className="mk-button mk-button-dark" href="/demo">Masuk Demo Pro <ArrowRight size={16}/></Link></section>
