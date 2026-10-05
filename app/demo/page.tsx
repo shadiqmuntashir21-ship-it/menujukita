@@ -2,7 +2,7 @@
 import { FormEvent,useEffect,useMemo,useState } from "react";
 import Link from "next/link";
 import { Armchair,CalendarClock,CircleDollarSign,FileText,Home,ListChecks,Menu,RotateCcw,Settings,Store,UsersRound,X } from "lucide-react";
-import { demoSeed,type DemoState } from "@/lib/demo-data";
+import { demoSeed,type DemoState,type DemoRundown } from "@/lib/demo-data";
 
 type View="home"|"plan"|"money"|"guests"|"vendors"|"seating"|"timeline"|"vault"|"team"|"settings"|"dayh";
 const nav:[View,any,string][]=[
@@ -114,7 +114,7 @@ function DemoSeating({data,setData}:{data:DemoState;setData:React.Dispatch<React
 }
 
 function DemoTimeline({data,setData}:{data:DemoState;setData:React.Dispatch<React.SetStateAction<DemoState>>}){
- function add(e:FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget),activity=s(f,"activity");if(!activity)return;setData(d=>({...d,rundown:[...d.rundown,{id:nextId(d.rundown),time:s(f,"time")||"12:00",activity,location:s(f,"location"),pic:s(f,"pic"),vendor:s(f,"vendor"),status:"upcoming",notes:s(f,"notes")}].sort((a,b)=>a.time.localeCompare(b.time))}));e.currentTarget.reset()}
+ function add(e:FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget),activity=s(f,"activity");if(!activity)return;setData(d=>({...d,rundown:[...d.rundown,{id:nextId(d.rundown),time:s(f,"time")||"12:00",activity,location:s(f,"location"),pic:s(f,"pic"),vendor:s(f,"vendor"),status:"upcoming" as DemoRundown["status"],notes:s(f,"notes")}].sort((a,b)=>a.time.localeCompare(b.time))}));e.currentTarget.reset()}
  function update(e:FormEvent<HTMLFormElement>,id:number){e.preventDefault();const f=new FormData(e.currentTarget);setData(d=>({...d,rundown:d.rundown.map(r=>r.id===id?{...r,time:s(f,"time"),activity:s(f,"activity"),location:s(f,"location"),pic:s(f,"pic"),vendor:s(f,"vendor"),status:s(f,"status") as any,notes:s(f,"notes")}:r).sort((a,b)=>a.time.localeCompare(b.time))}))}
  return <section className="module-stack"><header className="module-editorial-head"><div><span className="micro-label">TIMELINE · {data.rundown.length} ITEMS</span><h2 className="serif">Master Rundown</h2><p>Contoh rundown detail dari wake-up call sampai wrap. Semua agenda bisa ditambah, edit, hapus, atau diubah status.</p></div></header>
   <details className="composer-card"><summary><span>+ Tambah agenda</span><small>Time, PIC, vendor, lokasi</small></summary><form className="editor-form" onSubmit={add}><input className="input" type="time" name="time" required/><input className="input" name="activity" placeholder="Agenda" required/><input className="input" name="location" placeholder="Lokasi"/><input className="input" name="pic" placeholder="PIC"/><input className="input" name="vendor" placeholder="Vendor"/><input className="input" name="notes" placeholder="Notes"/><button className="btn btn-primary span-2">Tambah Agenda</button></form></details>
