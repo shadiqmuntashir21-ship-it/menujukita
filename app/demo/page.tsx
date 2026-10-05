@@ -155,3 +155,33 @@ function DemoDayH({data,setData}:{data:DemoState;setData:React.Dispatch<React.Se
  const setCurrent=(id:number)=>setData(d=>({...d,rundown:d.rundown.map(r=>({...r,status:r.id===id?"next":r.status==="next"?"upcoming":r.status}))}));
  return <section className="demo-dayh-local"><div className="dayh-focus-grid"><article className="dayh-current"><span className="dayh-label">NOW</span><div className="dayh-clock">{current?.time}</div><h1>{current?.activity}</h1><p>{current?.location} · PIC {current?.pic}</p></article><article className="dayh-next"><span className="dayh-label">NEXT</span><b>{next?.time||"--:--"}</b><h2>{next?.activity||"Rundown selesai"}</h2><p>{next?.location}</p></article></div><section className="dayh-list-card"><div className="dayh-section-title"><CalendarClock size={18}/><div><h3>Day-H Mission Control</h3><small>{data.details.emergencyContact}</small></div></div>{data.rundown.map(r=><div className={"dayh-row "+(r.id===current?.id?"active":"")} key={r.id}><time>{r.time}</time><div><b>{r.activity}</b><span>{r.location} · {r.vendor}</span></div><div className="demo-dayh-actions"><button onClick={()=>setData(d=>({...d,rundown:d.rundown.map(x=>x.id===r.id?{...x,status:"done"}:x)}))}>Done</button><button onClick={()=>setCurrent(r.id)}>Now</button></div></div>)}</section></section>
 }
+
+
+function DemoHealth({data}:{data:DemoState}){
+ const taskDone=data.tasks.filter(t=>t.status==="done").length,taskScore=data.tasks.length?Math.round(taskDone/data.tasks.length*100):0;
+ const actual=data.budgetItems.reduce((x,b)=>x+(b.actual||b.planned),0),budgetScore=data.budget?Math.max(20,Math.min(100,Math.round(100-Math.max(0,(actual-data.budget)/data.budget*100)))):80;
+ const secured=data.vendors.filter(v=>["Booked","Completed"].includes(v.status)).length,vendorScore=Math.round(secured/Math.max(1,data.vendors.length)*100);
+ const attending=data.guests.filter(g=>g.rsvp==="Attending").reduce((x,g)=>x+g.pax,0),guestScore=Math.min(100,Math.round(attending/Math.max(1,data.targetGuests)*100));
+ const overdue=data.payments.filter(p=>p.status==="Overdue").length,timelineScore=Math.max(35,100-overdue*18-data.tasks.filter(t=>t.status!=="done"&&t.priority==="critical").length*3);
+ const score=Math.round(taskScore*.30+budgetScore*.25+vendorScore*.20+guestScore*.10+timelineScore*.15);
+ const recommendations:string[]=[];
+ if(overdue)recommendations.push(`Selesaikan ${overdue} pembayaran yang sudah melewati jatuh tempo.`);
+ const critical=data.tasks.filter(t=>t.status!=="done"&&t.priority==="critical").slice(0,2);critical.forEach(t=>recommendations.push(`Prioritaskan: ${t.title}.`));
+ const waiting=data.guests.filter(g=>["Waiting","Maybe"].includes(g.rsvp)).length;if(waiting)recommendations.push(`Follow-up ${waiting} entri tamu yang RSVP-nya belum final.`);
+ if(vendorScore<85)recommendations.push("Finalisasi vendor yang masih Searching, Shortlisted, atau Negotiating.");
+ return <section className="module-stack"><header className="module-editorial-head"><div><span className="micro-label">WEDDING HEALTH · SYSTEM GENERATED</span><h2 className="serif">{score>=80?"Persiapan berada di jalur yang baik.":score>=65?"Ada beberapa bagian yang perlu perhatian.":"Beberapa area perlu segera dibereskan."}</h2><p>Score ini tidak diedit manual. Nilainya berubah otomatis saat task, budget, vendor, guest, dan payment berubah.</p></div><div className="module-score"><b>{score}/100</b><span>{score>=80?"Aman":score>=65?"Perlu perhatian":"Mendesak"}</span></div></header>
+  <div className="health-demo-grid">{[["Checklist",taskScore],["Budget",budgetScore],["Vendor",vendorScore],["Guest RSVP",guestScore],["Timeline & Payment",timelineScore]].map(([label,value])=><article className="studio-panel" key={String(label)}><div className="metric"><div><b>{label}</b><strong>{value}%</strong></div><div className="progress"><span style={{width:value+"%"}}/></div></div></article>)}</div>
+  <section className="studio-panel"><div className="panel-heading"><div><small>WHAT TO DO NOW</small><h3>Rekomendasi berikutnya</h3></div></div><div className="attention-list">{recommendations.slice(0,6).map((r,i)=><div className="attention-row" key={r}><span className="attention-index">{String(i+1).padStart(2,"0")}</span><span className="attention-copy"><b>{r}</b><small>Dihasilkan dari kondisi data demo saat ini</small></span></div>)}</div></section>
+ </section>
+}
+
+function DemoAlerts({data,go}:{data:DemoState;go:(v:View)=>void}){
+ const alerts:{title:string;meta:string;view:View;level:string}[]=[];
+ data.payments.filter(p=>p.status==="Overdue").forEach(p=>alerts.push({title:`Pembayaran overdue: ${p.title}`,meta:`${p.vendor} · ${money(p.amount)}`,view:"money",level:"critical"}));
+ data.tasks.filter(t=>t.status!=="done"&&["critical","high"].includes(t.priority)).slice(0,10).forEach(t=>alerts.push({title:t.title,meta:`${t.phase} · ${t.due}`,view:"plan",level:t.priority==="critical"?"critical":"important"}));
+ const waiting=data.guests.filter(g=>["Waiting","Maybe"].includes(g.rsvp)).length;if(waiting)alerts.push({title:`${waiting} tamu belum memberi RSVP final`,meta:"Follow-up Guest Book",view:"guests",level:"info"});
+ data.vendors.filter(v=>["Searching","Shortlisted","Negotiating"].includes(v.status)).slice(0,5).forEach(v=>alerts.push({title:`Vendor belum secured: ${v.name}`,meta:`${v.category} · ${v.status}`,view:"vendors",level:"info"}));
+ return <section className="module-stack"><header className="module-editorial-head"><div><span className="micro-label">NOTIFICATION CENTER</span><h2 className="serif">Yang perlu perhatian.</h2><p>Notifikasi ini dibentuk otomatis dari data wedding. Mengubah sumber data akan mengubah alert secara otomatis.</p></div><div className="module-score"><b>{alerts.length}</b><span>alert aktif</span></div></header>
+  <section className="studio-panel clean-list-panel"><div className="studio-list">{alerts.map((a,i)=><button className="attention-row demo-alert-row" key={a.title+i} onClick={()=>go(a.view)}><span className={"priority-dot "+a.level}/><span className="attention-copy"><b>{a.title}</b><small>{a.meta}</small></span><span className="attention-kind">Buka</span></button>)}</div></section>
+ </section>
+}
