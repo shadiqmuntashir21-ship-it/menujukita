@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowLeft,CheckCircle2,Clock3,Mail,ShieldCheck } from "lucide-react";
 import { sql } from "@/lib/db";
 import { ensureCommerceSchema } from "@/lib/commerce";
-import { claimPayment,changePaymentMethod } from "./actions";
+import { claimPayment,changePaymentMethod,updateBuyerDetails } from "./actions";
 import CopyButton from "@/components/commerce/copy-button";
 
 export const dynamic="force-dynamic";
@@ -17,7 +17,7 @@ const statusLabel:Record<string,string>={
  completed:"Selesai",
  cancelled:"Dibatalkan"
 };
-export default async function OrderPage({params,searchParams}:{params:Promise<{token:string}>;searchParams:Promise<{claimed?:string}>}){
+export default async function OrderPage({params,searchParams}:{params:Promise<{token:string}>;searchParams:Promise<{claimed?:string;updated?:string;error?:string}>}){
  const{token}=await params,q=await searchParams,db=sql();await ensureCommerceSchema(db);
  const rows=await db`SELECT o.*,pm.label payment_label FROM orders o LEFT JOIN payment_methods pm ON pm.code=o.payment_method_code WHERE o.public_token=${token} LIMIT 1`,order:any=rows[0];
  if(!order)return <main className="order-page"><div className="order-missing"><h1>Pesanan tidak ditemukan.</h1><Link href="/">Kembali ke MenujuKita</Link></div></main>;
@@ -34,6 +34,8 @@ export default async function OrderPage({params,searchParams}:{params:Promise<{t
     <section className="order-card-premium">
      <div className="order-section-title"><small>DETAIL PESANAN</small><h2>MenujuKita</h2></div>
      <div className="order-detail-list"><p><span>Order ID</span><b>{order.order_no}</b></p><p><span>Nama</span><b>{order.customer_name}</b></p><p><span>Email</span><b>{order.customer_email}</b></p><p><span>WhatsApp</span><b>{order.customer_whatsapp}</b></p><p><span>Total</span><b>{money(order.amount)}</b></p></div>
+     {order.status==="pending_payment"&&<details className="edit-order-buyer"><summary>Edit data pembeli</summary><form action={updateBuyerDetails} className="editor-form"><input type="hidden" name="token" value={token}/><input className="input span-2" name="name" defaultValue={order.customer_name} required/><input className="input" name="email" type="email" defaultValue={order.customer_email} required/><input className="input" name="whatsapp" defaultValue={order.customer_whatsapp} required/><input className="input" name="couple_names" defaultValue={order.couple_names||""} placeholder="Nama pasangan (opsional)"/><input className="input" name="wedding_date" type="date" defaultValue={order.wedding_date?String(order.wedding_date).slice(0,10):""}/><button className="btn btn-primary span-2">Simpan data pembeli</button></form></details>}
+     {q.updated&&<div className="success-box">Data pembeli berhasil diperbarui.</div>}{q.error&&<div className="notice">Periksa kembali nama, email, dan WhatsApp.</div>}
     </section>
     <section className="order-card-premium payment-order-card">
      <div className="order-section-title"><small>PEMBAYARAN</small><h2>{payment.label||order.payment_label}</h2></div>
