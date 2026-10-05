@@ -23,6 +23,15 @@ export async function claimPayment(formData:FormData){
  redirect("/order/"+token+"?claimed=1");
 }
 
+export async function updateBuyerDetails(formData:FormData){
+ const token=String(formData.get("token")||""),name=String(formData.get("name")||"").trim().slice(0,180),email=String(formData.get("email")||"").trim().toLowerCase().slice(0,180),whatsapp=String(formData.get("whatsapp")||"").trim().slice(0,40),couple=String(formData.get("couple_names")||"").trim().slice(0,180),weddingDate=String(formData.get("wedding_date")||"").trim()||null;
+ if(!token||name.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!/^\+?[0-9\s-]{8,20}$/.test(whatsapp))redirect("/order/"+token+"?error=data");
+ const db=sql();await ensureCommerceSchema(db);
+ const rows=await db`UPDATE orders SET customer_name=${name},customer_email=${email},customer_whatsapp=${whatsapp},couple_names=${couple||null},wedding_date=${weddingDate},updated_at=now() WHERE public_token=${token} AND status='pending_payment' RETURNING id`;
+ if(rows[0])await addOrderActivity(db,String(rows[0].id),"buyer_details_updated",{});
+ revalidatePath("/order/"+token);redirect("/order/"+token+"?updated=1");
+}
+
 export async function changePaymentMethod(formData:FormData){
  const token=String(formData.get("token")||""),method=String(formData.get("payment_method")||"");
  const db=sql();await ensureCommerceSchema(db);
