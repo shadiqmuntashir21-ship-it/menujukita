@@ -116,7 +116,8 @@ export async function logOrderEmail(db:any,orderId:string,kind:string,recipient:
  }
 }
 const money=(n:any)=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n||0));
-const safe=(s:any)=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]||c));
+const htmlEntities:Record<string,string>={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"};
+const safe=(value:any)=>String(value??"").replace(/[&<>"]/g,c=>htmlEntities[c]||c);
 
 export async function sendClaimEmails(db:any,order:any){
  const adminSubject=`[MenujuKita] Pembayaran Baru Menunggu Verifikasi — ${order.order_no}`;
