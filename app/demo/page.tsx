@@ -1,13 +1,13 @@
 "use client";
 import { FormEvent,useEffect,useMemo,useState } from "react";
 import Link from "next/link";
-import { Armchair,CalendarClock,CircleDollarSign,FileText,Home,ListChecks,Menu,RotateCcw,Settings,Store,UsersRound,X } from "lucide-react";
+import { Armchair,Bell,CalendarClock,CircleDollarSign,FileText,HeartPulse,Home,ListChecks,Menu,RotateCcw,Settings,Store,UsersRound,X } from "lucide-react";
 import { demoSeed,type DemoState,type DemoRundown } from "@/lib/demo-data";
 
-type View="home"|"plan"|"money"|"guests"|"vendors"|"seating"|"timeline"|"vault"|"team"|"settings"|"dayh";
+type View="home"|"plan"|"money"|"guests"|"vendors"|"seating"|"timeline"|"health"|"alerts"|"vault"|"team"|"settings"|"dayh";
 const nav:[View,any,string][]=[
  ["home",Home,"Home"],["plan",ListChecks,"Plan"],["money",CircleDollarSign,"Money"],["guests",UsersRound,"Guests"],
- ["vendors",Store,"Vendors"],["seating",Armchair,"Seating"],["timeline",CalendarClock,"Timeline"],["vault",FileText,"Vault"],
+ ["vendors",Store,"Vendors"],["seating",Armchair,"Seating"],["timeline",CalendarClock,"Timeline"],["health",HeartPulse,"Health"],["alerts",Bell,"Alerts"],["vault",FileText,"Vault"],
  ["team",UsersRound,"Team"],["settings",Settings,"Settings"],["dayh",CalendarClock,"Day-H"]
 ];
 const money=(n:number)=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(n);
@@ -38,6 +38,8 @@ export default function Demo(){
    {view==="vendors"&&<DemoVendors data={data} setData={setData}/>}
    {view==="seating"&&<DemoSeating data={data} setData={setData}/>}
    {view==="timeline"&&<DemoTimeline data={data} setData={setData}/>}
+   {view==="health"&&<DemoHealth data={data}/>} 
+   {view==="alerts"&&<DemoAlerts data={data} go={go}/>} 
    {view==="vault"&&<DemoVault data={data} setData={setData}/>}
    {view==="team"&&<DemoTeam data={data} setData={setData}/>}
    {view==="settings"&&<DemoSettings data={data} setData={setData}/>}
