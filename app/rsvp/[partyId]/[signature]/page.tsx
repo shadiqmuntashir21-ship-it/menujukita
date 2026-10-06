@@ -2,6 +2,7 @@ import{sql}from"@/lib/db";
 import{verifyRsvpParty}from"@/lib/rsvp";
 import{notFound}from"next/navigation";
 import{submitRsvp}from"./actions";
+import {BrandLogo} from "@/components/brand";
 
 export const dynamic="force-dynamic";
 
@@ -25,8 +26,8 @@ export default async function Page({params,searchParams}:{params:Promise<{partyI
   const hasSavedEvents=responses.length>0;
   const action=submitRsvp.bind(null,partyId,signature);
   return <main className="rsvp-page"><section className="rsvp-card">
-    <div className="brand"><span className="brand-mark">M</span><span className="brand-copy"><strong>MenujuKita</strong><small>Wedding RSVP</small></span></div>
-    <div className="rsvp-hero"><small>YOU&apos;RE INVITED</small><h1 className="serif">{x.couple_one_name} & {x.couple_two_name}</h1><p>{new Intl.DateTimeFormat("id-ID",{dateStyle:"full"}).format(new Date(x.wedding_date))}{x.city?" · "+x.city:""}</p></div>
+    <div className="brand"><BrandLogo className="auth-logo"/></div>
+    <div className="rsvp-hero"><small>UNDANGAN UNTUK ANDA</small><h1 className="serif">{x.couple_one_name} & {x.couple_two_name}</h1><p>{new Intl.DateTimeFormat("id-ID",{dateStyle:"full"}).format(new Date(x.wedding_date))}{x.city?" · "+x.city:""}</p></div>
     {q.saved==="1"&&<div className="success-box">Terima kasih. Konfirmasi kehadiran sudah tersimpan.</div>}{q.error==="event"&&<div className="notice">Pilih minimal satu acara jika Anda akan hadir.</div>}{q.error==="rate"&&<div className="notice">Terlalu banyak percobaan RSVP. Coba lagi beberapa saat nanti.</div>}
     <form action={action} className="stack">
       <div className="invitee"><small>Undangan untuk</small><h2>{x.party_name}</h2><span>Hingga {x.max_pax} orang</span></div>
@@ -36,6 +37,6 @@ export default async function Page({params,searchParams}:{params:Promise<{partyI
       <label className="field"><span>Catatan makanan (opsional)</span><textarea className="input" name="dietary_note" rows={3} defaultValue={x.dietary_note||""}/></label>
       <button className="btn btn-primary">Kirim RSVP</button>
     </form>
-    <p className="rsvp-footer">Plan the journey. Enjoy the day.</p>
+    <p className="rsvp-footer">MenujuKita · Wedding Planner</p>
   </section></main>
 }
