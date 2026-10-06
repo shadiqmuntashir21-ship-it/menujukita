@@ -201,3 +201,12 @@ input[type="number"]{-moz-appearance:textfield}
 .editor-form>* ,.form-grid>*{min-width:0}
 .brand-mark{background-color:#faf8f4!important;background-image:url("/icon-192.png")!important;background-size:92% auto!important;background-position:center!important;background-repeat:no-repeat!important;color:transparent!important;font-size:0!important}
 @media(max-width:760px){.brand-logo.nav-logo{width:145px}.brand-logo.auth-logo{width:168px}.brand-logo.checkout-brand-logo,.brand-logo.guide-brand-logo{width:130px}}
+
+
+/* Official logo placement */
+.auth-visual .brand-logo,.mk-hero .brand-logo{background:rgba(250,248,244,.94);padding:7px 11px;border-radius:18px;box-shadow:0 12px 36px rgba(18,22,19,.14)}
+.auth-card>.brand .brand-logo{margin-inline:auto}
+.checkout-top .brand,.guide-head .brand{min-width:0}
+.checkout-top .brand-logo,.guide-head .brand-logo{max-height:58px}
+.control-brand{min-width:0}.control-brand-logo{max-height:54px}
+@media(max-width:600px){.checkout-top .checkout-secure{display:none}.checkout-top .brand-logo{width:120px}.control-brand-logo{width:118px}}
