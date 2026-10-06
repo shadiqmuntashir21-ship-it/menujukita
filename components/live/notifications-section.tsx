@@ -1,6 +1,6 @@
 import { AlertTriangle,Bell,CalendarClock,CircleDollarSign,Store,UsersRound } from "lucide-react";
 
-const icons:any={Task:CalendarClock,Payment:CircleDollarSign,Vendor:Store,Guest:UsersRound};
+const icons:any={Task:CalendarClock,Payment:CircleDollarSign,Pembayaran:CircleDollarSign,Vendor:Store,Guest:UsersRound,Tamu:UsersRound};
 export default function NotificationsSection({items}:{items:any[]}){
   const critical=items.filter(x=>x.level==="critical").length;
   return <section id="notifications" className="module-stack"><div className="panel">
