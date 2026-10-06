@@ -210,3 +210,10 @@ input[type="number"]{-moz-appearance:textfield}
 .checkout-top .brand-logo,.guide-head .brand-logo{max-height:58px}
 .control-brand{min-width:0}.control-brand-logo{max-height:54px}
 @media(max-width:600px){.checkout-top .checkout-secure{display:none}.checkout-top .brand-logo{width:120px}.control-brand-logo{width:118px}}
+
+
+/* Supporting route brand alignment */
+.order-brand{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.order-brand .brand-logo{width:132px;max-height:52px}
+.rsvp-card>.brand .brand-logo{margin-inline:auto}
+@media(max-width:520px){.order-brand .brand-logo{width:112px}}
