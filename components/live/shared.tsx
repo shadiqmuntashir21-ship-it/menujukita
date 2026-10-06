@@ -1,4 +1,12 @@
 export const money=(n:any)=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n||0));
-export function dateLabel(v:any){if(!v)return"Tanpa deadline";const d=new Date(v);return Number.isNaN(d.getTime())?String(v):new Intl.DateTimeFormat("id-ID",{day:"numeric",month:"short",year:"numeric"}).format(d)}
-export function timeLabel(v:any){if(!v)return"—";const d=new Date(v);return Number.isNaN(d.getTime())?"—":new Intl.DateTimeFormat("id-ID",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:"Asia/Makassar"}).format(d)}
-export const labels:Record<string,string>={todo:"To do",in_progress:"Berjalan",done:"Selesai",skipped:"Lewati",searching:"Mencari",shortlisted:"Shortlist",contacted:"Dihubungi",negotiating:"Negosiasi",booked:"Booked",completed:"Selesai",cancelled:"Batal",upcoming:"Akan datang",paid:"Lunas",overdue:"Terlambat",waiting:"Menunggu",attending:"Hadir",not_attending:"Tidak hadir",maybe:"Mungkin",ready:"Siap",delayed:"Terlambat"};
+export const dateLabel=(v:any)=>v?new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(v)):"Belum dijadwalkan";
+export const timeLabel=(v:any)=>v?new Intl.DateTimeFormat("id-ID",{hour:"2-digit",minute:"2-digit"}).format(new Date(v)):"--:--";
+export const labels:Record<string,string>={
+  todo:"Belum mulai",in_progress:"Berjalan",done:"Selesai",skipped:"Dilewati",
+  searching:"Mencari",shortlisted:"Shortlist",contacted:"Dihubungi",negotiating:"Negosiasi",
+  booked:"Terkunci",completed:"Selesai",cancelled:"Batal",
+  upcoming:"Akan datang",paid:"Lunas",overdue:"Terlambat",
+  waiting:"Menunggu",attending:"Hadir",not_attending:"Tidak hadir",maybe:"Mungkin",
+  ready:"Siap",delayed:"Terlambat"
+};
+export const priorityLabels:Record<string,string>={low:"Rendah",medium:"Sedang",high:"Tinggi",critical:"Kritis"};
