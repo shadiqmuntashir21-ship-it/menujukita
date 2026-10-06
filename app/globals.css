@@ -164,3 +164,11 @@ body{background:var(--ivory);color:var(--ink)}::selection{background:#eadbd2;col
 .health-demo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.health-demo-grid .studio-panel{padding:15px}.health-demo-grid .metric strong{font-size:12px}.demo-alert-row{width:100%;border:0;background:transparent;text-align:left;cursor:pointer}.demo-guest-actions{display:flex;gap:8px;align-items:flex-start}.demo-guest-actions>details{margin:0}.demo-import-form{min-width:430px}.demo-import-form textarea{min-height:130px}
 @media(max-width:900px){.health-demo-grid{grid-template-columns:1fr 1fr}.demo-guest-actions{flex-wrap:wrap}.demo-import-form{min-width:min(430px,80vw)}}
 @media(max-width:620px){.health-demo-grid{grid-template-columns:1fr}.demo-guest-actions{display:grid;width:100%}.demo-guest-actions>details{width:100%}.demo-import-form{min-width:0}}
+
+
+/* MenujuKita official brand identity — 2026-10-06 */
+.brand-mark,.studio-logo,.install-prompt .brand-mark,.mk-brand>span{
+ background-color:#fbf8f4!important;background-image:url("/icon-192.png")!important;background-repeat:no-repeat!important;background-position:center!important;background-size:88% auto!important;color:transparent!important;font-size:0!important;border:1px solid rgba(182,154,112,.34)!important;box-shadow:0 8px 24px rgba(91,20,34,.08)
+}
+.mk-brand>span{border-radius:50%!important}.mk-brand b{font-family:Georgia,"Times New Roman",serif;font-size:18px;font-weight:600;letter-spacing:-.02em}.mk-brand small{text-transform:uppercase;letter-spacing:.14em;font-size:8px}.brand-copy strong{font-family:Georgia,"Times New Roman",serif;font-size:16px;letter-spacing:-.01em}.studio-logo{border-radius:16px!important}
+

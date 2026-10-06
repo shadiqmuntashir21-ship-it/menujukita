@@ -15,7 +15,7 @@ export default function Home(){
   <section className="mk-hero" style={{backgroundImage:"url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2200&q=88')"}}>
    <div className="mk-hero-shade"/>
    <nav className="mk-nav">
-    <Link className="mk-brand" href="/"><span>M</span><div><b>MenujuKita</b><small>Plan the journey. Enjoy the day.</small></div></Link>
+    <Link className="mk-brand" href="/"><span>M</span><div><b>MenujuKita</b><small>Wedding Planner</small></div></Link>
     <div className="mk-nav-links"><a href="#fitur">Fitur</a><a href="#cara-kerja">Cara Kerja</a><a href="#harga">Harga</a><Link href="/auth/sign-in">Masuk</Link></div>
     <Link className="mk-nav-cta" href="/demo">Coba Demo <ArrowRight size={15}/></Link>
    </nav>
@@ -63,6 +63,6 @@ export default function Home(){
   </section>
 
   <section className="mk-final-cta"><Sparkles size={22}/><h2>Persiapannya serius.<br/><em>Rasanya tetap harus menyenangkan.</em></h2><Link className="mk-button mk-button-dark" href="/demo">Masuk Demo Pro <ArrowRight size={16}/></Link></section>
-  <footer className="mk-footer"><div className="mk-brand dark"><span>M</span><div><b>MenujuKita</b><small>Plan the journey. Enjoy the day.</small></div></div><p>Created by <b>Teman Digital</b></p></footer>
+  <footer className="mk-footer"><div className="mk-brand dark"><span>M</span><div><b>MenujuKita</b><small>Wedding Planner</small></div></div><p>Created by <b>Teman Digital</b></p></footer>
  </main>
 }
