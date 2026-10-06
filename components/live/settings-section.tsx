@@ -18,7 +18,7 @@ export default function SettingsSection({wedding,licenseHint,admin,coverUrl}:{we
    await registerCoverPhoto({objectKey:data.key,contentType:file.type,size:file.size});router.refresh();
   }catch(e:any){setError(e?.message||"Foto belum bisa disimpan.")}finally{setBusy(false);if(fileRef.current)fileRef.current.value=""}
  }
- async function resetCover(){setBusy(true);setError("");try{await removeCoverPhoto();router.refresh()}catch{setError("Foto belum bisa dihapus.")}finally{setBusy(false)}}
+ async function resetCover(){if(!window.confirm("Hapus foto cover wedding?"))return;setBusy(true);setError("");try{await removeCoverPhoto();router.refresh()}catch{setError("Foto belum bisa dihapus.")}finally{setBusy(false)}}
  return <section id="settings" className="module-stack settings-premium">
   <header className="module-editorial-head"><div><span className="micro-label">RUANG WEDDING KALIAN</span><h2 className="serif">Buat ruang ini terasa seperti kalian.</h2><p>Foto cover, posisi, dan detail wedding dapat diubah kapan saja.</p></div></header>
   <section className="cover-settings-card">
