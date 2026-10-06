@@ -3,6 +3,7 @@
 import { useEffect,useRef,useState } from "react";
 import { usePathname } from "next/navigation";
 import { Download,X } from "lucide-react";
+import {BrandIcon} from "@/components/brand";
 
 type InstallEvent=Event&{prompt:()=>Promise<void>;userChoice:Promise<{outcome:"accepted"|"dismissed";platform:string}>};
 const DISMISS_MS=7*24*60*60*1000;
@@ -68,9 +69,9 @@ export function InstallPrompt(){
   }
 
   return <aside className="install-prompt">
-    <div className="brand-mark">M</div>
-    <div className="install-copy"><b>Install MenujuKita</b><small>Akses lebih cepat seperti aplikasi.</small></div>
-    <button className="btn btn-primary btn-sm" onClick={install}><Download size={15}/>Install</button>
+    <BrandIcon/>
+    <div className="install-copy"><b>Instal MenujuKita</b><small>Akses lebih cepat seperti aplikasi.</small></div>
+    <button className="btn btn-primary btn-sm" onClick={install}><Download size={15}/>Instal</button>
     <button className="icon-button" onClick={dismiss} aria-label="Tutup"><X size={15}/></button>
   </aside>;
 }
