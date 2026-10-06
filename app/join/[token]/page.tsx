@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { auth,authConfigured } from "@/lib/auth/server";
 import { sql } from "@/lib/db";
 import { acceptInvite } from "./actions";
+import {BrandLogo} from "@/components/brand";
 
 export const dynamic="force-dynamic";
 const hash=(v:string)=>crypto.createHash("sha256").update(v).digest("hex");
@@ -18,8 +19,8 @@ export default async function Page({params,searchParams}:{params:Promise<{token:
   const valid=invite&&invite.status==="pending"&&new Date(invite.expires_at)>new Date();
 
   return <main className="auth-page"><section className="auth-card stack">
-    <div className="brand"><span className="brand-mark">M</span><span className="brand-copy"><strong>MenujuKita</strong><small>Wedding Collaboration</small></span></div>
-    {!authConfigured?<div className="notice">Server authentication belum dikonfigurasi. Invite tetap aman dan dapat digunakan setelah setup production selesai.</div>:null}
-    {!valid?<div><span className="eyebrow">INVITE TIDAK AKTIF</span><h1 className="serif" style={{fontSize:38}}>Link ini sudah tidak berlaku.</h1><p className="muted">Minta owner wedding membuat invite link baru.</p></div>:<><div><span className="eyebrow">YOU'RE INVITED</span><h1 className="serif" style={{fontSize:38}}>{invite.couple_one_name} & {invite.couple_two_name}</h1><p className="muted">Anda diundang sebagai <b>{invite.role}</b>{invite.can_view_budget?" dengan akses budget":""}.</p></div>{q.error&&<div className="notice">{q.error==="email"?"Invitation ini ditujukan untuk email lain. Masuk dengan email yang menerima undangan.":"Invitation tidak dapat diterima."}</div>}{session?.user?<form action={acceptInvite.bind(null,token)}><button className="btn btn-primary" style={{width:"100%"}}>Gabung ke Wedding</button></form>:<div className="stack"><Link className="btn btn-primary" href={"/auth/sign-in?next="+encodeURIComponent("/join/"+token)}>Masuk untuk menerima</Link><Link className="btn" href={"/auth/sign-up?next="+encodeURIComponent("/join/"+token)}>Buat akun</Link></div>}</>}
+    <div className="brand"><BrandLogo className="auth-logo"/></div>
+    {!authConfigured?<div className="notice">Server authentication belum dikonfigurasi. Undangan tetap aman dan dapat digunakan setelah setup production selesai.</div>:null}
+    {!valid?<div><span className="eyebrow">UNDANGAN TIDAK AKTIF</span><h1 className="serif" style={{fontSize:38}}>Link ini sudah tidak berlaku.</h1><p className="muted">Minta owner wedding membuat link undangan baru.</p></div>:<><div><span className="eyebrow">UNDANGAN UNTUK ANDA</span><h1 className="serif" style={{fontSize:38}}>{invite.couple_one_name} & {invite.couple_two_name}</h1><p className="muted">Anda diundang sebagai <b>{invite.role}</b>{invite.can_view_budget?" dengan akses budget":""}.</p></div>{q.error&&<div className="notice">{q.error==="email"?"Undangan ini ditujukan untuk email lain. Masuk dengan email yang menerima undangan.":"Undangan tidak dapat diterima."}</div>}{session?.user?<form action={acceptInvite.bind(null,token)}><button className="btn btn-primary" style={{width:"100%"}}>Gabung ke Wedding</button></form>:<div className="stack"><Link className="btn btn-primary" href={"/auth/sign-in?next="+encodeURIComponent("/join/"+token)}>Masuk untuk menerima</Link><Link className="btn" href={"/auth/sign-up?next="+encodeURIComponent("/join/"+token)}>Buat akun</Link></div>}</>}
   </section></main>;
 }

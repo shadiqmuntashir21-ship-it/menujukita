@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {BrandLogo} from "@/components/brand";
 import { Activity,CreditCard,Database,LogOut,ShoppingBag,ShieldCheck,Smartphone,UsersRound } from "lucide-react";
 import LicenseGenerator from "./license-generator";
 import PinResetButton from "./pin-reset-button";
@@ -32,9 +33,9 @@ export default async function Page(){
  ]);
  const active=Number(cap?.active||0),max=Number(cap?.max_active_weddings||250),pct=Math.min(100,Math.round(active/max*100));
  return <main className="control-center">
-  <header className="control-top"><div className="control-brand"><span className="brand-mark">M</span><div><small>TEMAN DIGITAL</small><strong>MenujuKita Control Center</strong></div></div><div className="control-top-actions"><Link href="/admin/orders"><ShoppingBag size={16}/>Orders</Link><Link href="/admin/payments"><CreditCard size={16}/>Pembayaran</Link><form action={adminLogout}><button className="control-logout"><LogOut size={16}/>Keluar</button></form></div></header>
+  <header className="control-top"><div className="control-brand"><BrandLogo className="control-brand-logo"/><div><small>TEMAN DIGITAL</small><strong>Pusat Kontrol</strong></div></div><div className="control-top-actions"><Link href="/admin/orders"><ShoppingBag size={16}/>Orders</Link><Link href="/admin/payments"><CreditCard size={16}/>Pembayaran</Link><form action={adminLogout}><button className="control-logout"><LogOut size={16}/>Keluar</button></form></div></header>
 
-  <section className="control-hero"><div><span className="micro-label">SUPER ADMIN</span><h1 className="serif">Order, payment,<br/>license & wedding.</h1><p>Satu kanal untuk memeriksa pembayaran, mengirim akses, membantu customer, dan menjaga kapasitas 250 wedding.</p></div><div className="capacity-orbit" style={{"--capacity":pct} as any}><div><b>{active}</b><span>of {max}</span><small>active wedding</small></div></div></section>
+  <section className="control-hero"><div><span className="micro-label">SUPER ADMIN</span><h1 className="serif">Order, pembayaran,<br/>lisensi & wedding.</h1><p>Satu kanal untuk memeriksa pembayaran, mengirim akses, membantu customer, dan menjaga kapasitas 250 wedding.</p></div><div className="capacity-orbit" style={{"--capacity":pct} as any}><div><b>{active}</b><span>of {max}</span><small>active wedding</small></div></div></section>
 
   <section className="commerce-admin-glance">
    <Link href="/admin/orders?status=awaiting_verification"><small>MENUNGGU VERIFIKASI</small><b>{orderStats?.awaiting_verification||0}</b><span>perlu cek mutasi sekarang</span></Link>
@@ -49,9 +50,9 @@ export default async function Page(){
    <div className="recent-order-list">{(recentOrders as any[]).length?(recentOrders as any[]).map(o=><Link href={"/admin/orders/"+o.id} key={o.id}><div><b>{o.order_no}</b><span>{o.customer_name} · {o.payment_label||"Pembayaran"}</span></div><div><strong>{money(o.amount)}</strong><small className={"status-pill "+o.status}>{orderLabel[o.status]||o.status}</small></div></Link>):<div className="calm-empty">Belum ada order MenujuKita.</div>}</div>
   </section>
 
-  <div className="control-split"><LicenseGenerator/><section className="admin-card"><div className="admin-card-head"><div><span className="micro-label">PILOT POLICY</span><h3>Guardrails</h3></div><ShieldCheck size={20}/></div><div className="control-rules"><p><span>Active wedding</span><b>{max} max</b></p><p><span>Harga</span><b>Rp49.000</b></p><p><span>Customer login</span><b>MK Code + PIN</b></p><p><span>Payment</span><b>Owner verification</b></p><p><span>Email admin</span><b>temandigital26@gmail.com</b></p><p><span>Demo</span><b>local only</b></p></div></section></div>
+  <div className="control-split"><LicenseGenerator/><section className="admin-card"><div className="admin-card-head"><div><span className="micro-label">PILOT POLICY</span><h3>Guardrails</h3></div><ShieldCheck size={20}/></div><div className="control-rules"><p><span>Wedding aktif</span><b>{max} max</b></p><p><span>Harga</span><b>Rp49.000</b></p><p><span>Login customer</span><b>MK Code + PIN</b></p><p><span>Payment</span><b>Verifikasi owner</b></p><p><span>Email admin</span><b>temandigital26@gmail.com</b></p><p><span>Demo</span><b>lokal saja</b></p></div></section></div>
 
-  <section className="registry-section"><div className="registry-head"><div><span className="micro-label">ACCESS REGISTRY</span><h2 className="serif">250 license slots</h2><p>Kode customer berbentuk MK-XXXX-XXXX. PIN dapat di-reset kapan saja.</p></div><span className="registry-count">{licenses.length} issued</span></div>
+  <section className="registry-section"><div className="registry-head"><div><span className="micro-label">REGISTRI AKSES</span><h2 className="serif">250 slot lisensi</h2><p>Kode customer berbentuk MK-XXXX-XXXX. PIN dapat di-reset kapan saja.</p></div><span className="registry-count">{licenses.length} diterbitkan</span></div>
    <div className="license-registry">{(licenses as any[]).map(l=><article className={"license-card status-"+l.status} key={l.id}>
     <div className="license-card-top"><div><small>LICENSE</small><code>MK-••••-{l.code_hint}</code></div><span className={"status-pill "+l.status}>{l.status}</span></div>
     <div className="license-wedding">{l.couple_one_name?<><b>{l.couple_one_name} & {l.couple_two_name}</b><span>{date(l.wedding_date)} · PIN ••••{l.pin_hint||"—"}</span></>:<><b>Belum diaktivasi</b><span>Dibuat {date(l.created_at)} · PIN ••••{l.pin_hint||"—"}</span></>}</div>
@@ -64,6 +65,6 @@ export default async function Page(){
    </article>)}</div>
   </section>
 
-  <section className="admin-card audit-card"><div className="admin-card-head"><div><span className="micro-label">AUDIT TRAIL</span><h3>Access activity</h3></div><Activity size={20}/></div><div className="audit-list">{(logs as any[]).map(x=><div className="audit-row" key={x.id}><span className={"audit-status "+(x.success?"ok":"fail")}/><div><b>{x.event.replaceAll("_"," ")}</b><small>{x.actor_type} · {date(x.created_at)}</small></div></div>)}</div></section>
+  <section className="admin-card audit-card"><div className="admin-card-head"><div><span className="micro-label">LOG AUDIT</span><h3>Aktivitas akses</h3></div><Activity size={20}/></div><div className="audit-list">{(logs as any[]).map(x=><div className="audit-row" key={x.id}><span className={"audit-status "+(x.success?"ok":"fail")}/><div><b>{x.event.replaceAll("_"," ")}</b><small>{x.actor_type} · {date(x.created_at)}</small></div></div>)}</div></section>
  </main>
 }

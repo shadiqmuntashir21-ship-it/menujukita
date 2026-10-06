@@ -104,3 +104,12 @@
  .demo-studio .demo-master-timeline .timeline-item>summary{grid-template-columns:48px minmax(0,1fr)}
  .demo-studio .demo-master-timeline .timeline-item>summary>.status-dot{grid-column:2;justify-self:start}
 }
+
+
+/* Final Demo Pro form polish */
+.demo-money-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:18px;max-width:980px}
+.demo-money-settings .field{min-width:0}
+.demo-money-settings .currency-input{background:#fff}
+.demo-studio .editor-form .field{align-self:stretch}
+.demo-studio .editor-form .currency-input{height:100%}
+@media(max-width:700px){.demo-money-settings{grid-template-columns:1fr;max-width:none}}

@@ -172,3 +172,53 @@ body{background:var(--ivory);color:var(--ink)}::selection{background:#eadbd2;col
 }
 .mk-brand>span{border-radius:50%!important}.mk-brand b{font-family:Georgia,"Times New Roman",serif;font-size:18px;font-weight:600;letter-spacing:-.02em}.mk-brand small{text-transform:uppercase;letter-spacing:.14em;font-size:8px}.brand-copy strong{font-family:Georgia,"Times New Roman",serif;font-size:16px;letter-spacing:-.01em}.studio-logo{border-radius:16px!important}
 
+
+
+/* MenujuKita final visual system — official branding + premium forms */
+.brand-icon{width:42px;height:42px;border-radius:14px;background:#faf8f4;display:inline-grid;place-items:center;overflow:hidden;border:1px solid rgba(182,154,112,.32);box-shadow:0 8px 24px rgba(91,20,34,.08);flex:0 0 auto}
+.brand-icon img{width:92%;height:92%;object-fit:contain;display:block}
+.brand-logo{display:block;width:auto;height:auto;max-width:100%;object-fit:contain}
+.brand-logo.nav-logo{width:176px;max-height:70px}
+.brand-logo.footer-logo{width:190px}
+.brand-logo.auth-logo{width:190px;margin-bottom:4px}
+.brand-logo.checkout-brand-logo,.brand-logo.guide-brand-logo{width:148px}
+.brand-logo.control-brand-logo{width:150px}
+.mk-nav .brand-logo{background:rgba(250,248,244,.94);padding:6px 10px;border-radius:17px;box-shadow:0 12px 36px rgba(18,22,19,.12)}
+.mk-footer .brand-logo{width:180px}
+.field{min-width:0;gap:7px}
+.field>span{font-size:12px;font-weight:850;color:var(--ink);line-height:1.35}
+.input,.currency-input{min-height:48px;border:1px solid var(--line);background:#fff;border-radius:14px;color:var(--ink);transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.input{padding:12px 13px}
+.input:hover,.currency-input:hover{border-color:#cfc4b5}
+.input:focus{outline:none;border-color:#9dac9f;box-shadow:0 0 0 4px rgba(83,94,87,.08)}
+.currency-input{width:100%;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;overflow:hidden}
+.currency-prefix{padding-left:13px;color:var(--muted);font-size:12px;font-weight:900;user-select:none}
+.currency-input>input[type="text"]{width:100%;min-width:0;height:46px;border:0;outline:0;background:transparent;padding:11px 13px 11px 7px;color:var(--ink);font:inherit;font-variant-numeric:tabular-nums}
+.currency-input:focus-within{border-color:#9dac9f;box-shadow:0 0 0 4px rgba(83,94,87,.08)}
+input[type="number"]::-webkit-outer-spin-button,input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type="number"]{-moz-appearance:textfield}
+.editor-form,.form-grid{min-width:0}
+.editor-form>* ,.form-grid>*{min-width:0}
+.brand-mark{background-color:#faf8f4!important;background-image:url("/icon-192.png")!important;background-size:92% auto!important;background-position:center!important;background-repeat:no-repeat!important;color:transparent!important;font-size:0!important}
+@media(max-width:760px){.brand-logo.nav-logo{width:145px}.brand-logo.auth-logo{width:168px}.brand-logo.checkout-brand-logo,.brand-logo.guide-brand-logo{width:130px}}
+
+
+/* Official logo placement */
+.auth-visual .brand-logo,.mk-hero .brand-logo{background:rgba(250,248,244,.94);padding:7px 11px;border-radius:18px;box-shadow:0 12px 36px rgba(18,22,19,.14)}
+.auth-card>.brand .brand-logo{margin-inline:auto}
+.checkout-top .brand,.guide-head .brand{min-width:0}
+.checkout-top .brand-logo,.guide-head .brand-logo{max-height:58px}
+.control-brand{min-width:0}.control-brand-logo{max-height:54px}
+@media(max-width:600px){.checkout-top .checkout-secure{display:none}.checkout-top .brand-logo{width:120px}.control-brand-logo{width:118px}}
+
+
+/* Supporting route brand alignment */
+.order-brand{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.order-brand .brand-logo{width:132px;max-height:52px}
+.rsvp-card>.brand .brand-logo{margin-inline:auto}
+@media(max-width:520px){.order-brand .brand-logo{width:112px}}
+
+
+/* Official symbol containers */
+.studio-logo{background:none!important;background-image:none!important;border:0!important;box-shadow:none!important;padding:1px!important;overflow:visible!important}
+.studio-logo .brand-icon{width:44px;height:44px}

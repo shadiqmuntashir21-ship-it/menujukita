@@ -4,6 +4,7 @@ import { sql } from "@/lib/db";
 import { ensureCommerceSchema } from "@/lib/commerce";
 import { claimPayment,changePaymentMethod,updateBuyerDetails } from "./actions";
 import CopyButton from "@/components/commerce/copy-button";
+import {BrandLogo} from "@/components/brand";
 
 export const dynamic="force-dynamic";
 const money=(n:any)=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n||0));
@@ -23,7 +24,7 @@ export default async function OrderPage({params,searchParams}:{params:Promise<{t
  if(!order)return <main className="order-page"><div className="order-missing"><h1>Pesanan tidak ditemukan.</h1><Link href="/">Kembali ke MenujuKita</Link></div></main>;
  const payment=order.payment_snapshot||{},methods=order.status==="pending_payment"?await db`SELECT code,label FROM payment_methods WHERE is_active=true ORDER BY sort_order,label`:[];
  return <main className="order-page">
-  <header className="order-top"><Link href="/"><ArrowLeft size={16}/>MenujuKita</Link><span>Order {order.order_no}</span></header>
+  <header className="order-top"><Link href="/" className="order-brand"><ArrowLeft size={16}/><BrandLogo className="checkout-brand-logo"/></Link><span>Order {order.order_no}</span></header>
   <section className="order-wrap">
    <div className="order-status-card">
     <span className={"order-status-icon status-"+order.status}>{["access_sent","completed","payment_verified"].includes(order.status)?<CheckCircle2 size={24}/>:<Clock3 size={24}/>}</span>
