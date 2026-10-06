@@ -7,8 +7,8 @@ export const metadata:Metadata={
   description:"Wedding planning studio untuk checklist, budget, vendor, tamu, RSVP, seating, dokumen, dan hari H.",
   applicationName:"MenujuKita",manifest:"/manifest.webmanifest",
   icons:{
-    icon:[{url:"/favicon-64.png",sizes:"64x64",type:"image/png"},{url:"/icon-192.png",sizes:"192x192",type:"image/png"},{url:"/icon-512.png",sizes:"512x512",type:"image/png"}],
-    shortcut:"/favicon-64.png",
+    icon:[{url:"/icon-192.png",sizes:"192x192",type:"image/png"},{url:"/icon-512.png",sizes:"512x512",type:"image/png"}],
+    shortcut:"/icon-192.png",
     apple:[{url:"/icon-192.png",sizes:"192x192",type:"image/png"}]
   },
   appleWebApp:{capable:true,title:"MenujuKita",statusBarStyle:"default"}
