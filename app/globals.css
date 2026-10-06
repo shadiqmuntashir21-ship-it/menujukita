@@ -217,3 +217,4 @@ input[type="number"]{-moz-appearance:textfield}
 .order-brand .brand-logo{width:132px;max-height:52px}
 .rsvp-card>.brand .brand-logo{margin-inline:auto}
 @media(max-width:520px){.order-brand .brand-logo{width:112px}}
+\n\n/* Official symbol containers */\n.studio-logo{background:none!important;background-image:none!important;border:0!important;box-shadow:none!important;padding:1px!important;overflow:visible!important}\n.studio-logo .brand-icon{width:44px;height:44px}\n
