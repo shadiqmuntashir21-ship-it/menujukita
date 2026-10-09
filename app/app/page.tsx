@@ -15,6 +15,8 @@ import GlobalSearch from "@/components/live/global-search";
 import WeddingStudio from "@/components/live/wedding-studio";
 import GuideSection from "@/components/live/guide-section";
 import {loadWeddingFinance} from "@/lib/finance";
+import {assembleWeddingCalendar} from "@/lib/calendar";
+import CalendarSection from "@/components/live/calendar-section";
 
 export const dynamic="force-dynamic";
 const n=(v:any)=>Number(v||0);
@@ -40,6 +42,8 @@ export default async function Page(){
  ]);
  const {entries:cashEntries,summary:finance}=await loadWeddingFinance(db,String(wedding.id),n(wedding.budget_total),n(wedding.reserve_buffer));
  const partnerAccess=await db`SELECT status,display_name FROM wedding_partner_access WHERE wedding_id=${wedding.id} LIMIT 1`;
+ const agenda=await db`SELECT id,title,kind,happens_on,starts_at,location,note FROM wedding_agenda_entries WHERE wedding_id=${wedding.id} ORDER BY happens_on,starts_at LIMIT 500`;
+ const calendarEvents=assembleWeddingCalendar({tasks:tasks as any[],payments:paymentsRaw as any[],events:events as any[],rundown:rundown as any[],agenda:agenda as any[]});
  const payments=(paymentsRaw as any[]).map(p=>({...p,status:p.display_status||p.status})),total=tasks.length,done=tasks.filter((t:any)=>t.status==="done").length,progress=total?Math.round(done/total*100):0;
  const days=wedding.wedding_date?Math.max(0,diffDays(wedding.wedding_date)):null,planned=(budgetItems as any[]).reduce((s,b)=>s+n(b.planned_amount),0),actual=(budgetItems as any[]).reduce((s,b)=>s+n(b.actual_amount||b.planned_amount),0);
  const paid=finance.vendorPayments;
@@ -68,5 +72,6 @@ export default async function Page(){
   activity={<ActivitySection items={activity as any[]}/>}
   settings={<SettingsSection wedding={wedding} licenseHint={license?.code_hint} admin={Boolean(admin)} coverUrl={coverUrl}/>}
   guide={<GuideSection/>}
+  calendar={<CalendarSection events={calendarEvents} currentMonth={new Date().toLocaleDateString("sv-SE",{timeZone:"Asia/Makassar"}).slice(0,7)}/>}
  />
 }
