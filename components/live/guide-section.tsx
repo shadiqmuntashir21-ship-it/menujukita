@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useState,type CSSProperties} from "react";
 import {ArrowRight,BookOpen,CalendarDays,ChevronDown,ClipboardCheck,HelpCircle,Lightbulb,Search,UsersRound} from "lucide-react";
 import {WEDDING_GUIDES,WEDDING_PHASES,guideById,guideForTask,type WeddingGuide,type WeddingPhase} from "@/lib/wedding-guides";
 
@@ -31,7 +31,7 @@ export default function GuideSection(){
  },[]);
  const filtered=useMemo(()=>WEDDING_GUIDES.filter(g=>(category==="Semua"||g.phase===category)&&(!query||[g.title,g.why,...g.keywords].join(" ").toLowerCase().includes(query.trim().toLowerCase()))),[category,query]);
  const selected=chosen?guideById(chosen):null;
- const panel:React.CSSProperties={border:"1px solid rgba(73,87,76,.13)",borderRadius:22,padding:20,background:"#fff"};
+ const panel:CSSProperties={border:"1px solid rgba(73,87,76,.13)",borderRadius:22,padding:20,background:"#fff"};
  return <section id="guide" className="module-stack" aria-labelledby="guide-heading">
    <header className="module-editorial-head"><div><span className="micro-label">PUSAT PANDUAN</span><h2 id="guide-heading" className="serif">Belajar sambil menyiapkan wedding.</h2><p>Pilih topik, pahami alasan dan langkahnya, lalu langsung kerjakan di ruang wedding kalian. Semua materi dapat dibuka ulang kapan saja.</p></div><BookOpen size={30}/></header>
    {selected?<article style={{...panel,display:"grid",gap:18}}>
