@@ -9,7 +9,7 @@ import GuideSection,{GuideInline} from "@/components/live/guide-section";
 import DemoSavings from "@/components/live/demo-savings";
 import DemoCompanion from "@/components/live/demo-companion";
 
-type View="guide"|"home"|"plan"|"money"|"guests"|"vendors"|"seating"|"timeline"|"health"|"alerts"|"vault"|"team"|"settings"|"dayh";
+type View="concept"|"gifts"|"decisions"|"invitation"|"guide"|"home"|"plan"|"money"|"guests"|"vendors"|"seating"|"timeline"|"health"|"alerts"|"vault"|"team"|"settings"|"dayh";
 const nav:[View,any,string][]=[
  ["home",Home,"Beranda"],["plan",ListChecks,"Rencana"],["money",CircleDollarSign,"Dana"],["guests",UsersRound,"Tamu"],
  ["vendors",Store,"Vendor"],["seating",Armchair,"Meja"],["timeline",CalendarClock,"Timeline"],["health",HeartPulse,"Health"],["alerts",Bell,"Perhatian"],["vault",FileText,"Vault"],
