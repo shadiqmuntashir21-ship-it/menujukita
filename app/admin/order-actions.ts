@@ -12,9 +12,15 @@ export async function confirmPayment(formData:FormData){
  const orders=await db`SELECT o.*,pm.label payment_label FROM orders o LEFT JOIN payment_methods pm ON pm.code=o.payment_method_code WHERE o.id=${id} LIMIT 1`,order:any=orders[0];if(!order)return;
  if(["access_sent","completed"].includes(order.status)){refresh(id);return}
  if(order.license_id&&order.license_code){
-  const pin=newCustomerPin(),salt=newPinSalt();await db`UPDATE licenses SET pin_hash=${hashPin(pin,salt)},pin_salt=${salt},pin_hint=${pin.slice(-2)},pin_updated_at=now(),updated_at=now() WHERE id=${order.license_id}`;
-  await db`UPDATE license_sessions SET revoked_at=now() WHERE license_id=${order.license_id} AND revoked_at IS NULL`;
-  const sent=await sendAccessEmail(db,order,order.license_code,pin,true);if(sent)await db`UPDATE orders SET status='access_sent',access_sent_at=now(),updated_at=now() WHERE id=${id}`;
+  // Only rotate an existing customer's PIN after the provider accepts the replacement email.
+  // A failed email must never lock the customer out of their existing access.
+  const pin=newCustomerPin(),salt=newPinSalt();
+  const sent=await sendAccessEmail(db,order,order.license_code,pin,true);
+  if(sent){
+    await db`UPDATE licenses SET pin_hash=${hashPin(pin,salt)},pin_salt=${salt},pin_hint=${pin.slice(-2)},pin_updated_at=now(),updated_at=now() WHERE id=${order.license_id}`;
+    await db`UPDATE license_sessions SET revoked_at=now() WHERE license_id=${order.license_id} AND revoked_at IS NULL`;
+    await db`UPDATE orders SET status='access_sent',access_sent_at=now(),updated_at=now() WHERE id=${id}`;
+  }
   refresh(id);return;
  }
  if(!["awaiting_verification","needs_confirmation","payment_verified"].includes(order.status))return;
@@ -55,9 +61,15 @@ export async function rejectPayment(formData:FormData){
 export async function resendAccess(formData:FormData){
  const{db}=await requireAdmin();await ensureCommerceSchema(db);const id=String(formData.get("id")||"");
  const rows=await db`SELECT o.*,l.id actual_license_id FROM orders o JOIN licenses l ON l.id=o.license_id WHERE o.id=${id} AND o.license_code IS NOT NULL LIMIT 1`,order:any=rows[0];if(!order)return;
- const pin=newCustomerPin(),salt=newPinSalt();await db`UPDATE licenses SET pin_hash=${hashPin(pin,salt)},pin_salt=${salt},pin_hint=${pin.slice(-2)},pin_updated_at=now(),updated_at=now() WHERE id=${order.actual_license_id}`;
- await db`UPDATE license_sessions SET revoked_at=now() WHERE license_id=${order.actual_license_id} AND revoked_at IS NULL`;
- const sent=await sendAccessEmail(db,order,order.license_code,pin,true);if(sent){await db`UPDATE orders SET status='access_sent',access_sent_at=now(),updated_at=now() WHERE id=${id}`;await addOrderActivity(db,id,"access_resent",{resetPin:true})}
+ // Do not invalidate the current PIN or active sessions when email delivery fails.
+ const pin=newCustomerPin(),salt=newPinSalt();
+ const sent=await sendAccessEmail(db,order,order.license_code,pin,true);
+ if(sent){
+  await db`UPDATE licenses SET pin_hash=${hashPin(pin,salt)},pin_salt=${salt},pin_hint=${pin.slice(-2)},pin_updated_at=now(),updated_at=now() WHERE id=${order.actual_license_id}`;
+  await db`UPDATE license_sessions SET revoked_at=now() WHERE license_id=${order.actual_license_id} AND revoked_at IS NULL`;
+  await db`UPDATE orders SET status='access_sent',access_sent_at=now(),updated_at=now() WHERE id=${id}`;
+  await addOrderActivity(db,id,"access_resent",{resetPin:true});
+ }
  refresh(id);
 }
 
