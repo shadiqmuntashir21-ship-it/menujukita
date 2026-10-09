@@ -20,23 +20,27 @@
 - Non-destructive, auditable cash ledger for deposits/withdrawals/refunds/vendor payments; vendor payments synchronized by database triggers.
 - Joint calendar displaying existing tasks, payments, wedding events, and rundown plus writable custom agenda.
 - Separate partner identity with one-time link, personal six-digit PIN, scoped session and revocation.
-- Basic educational guide integration into browser-local Demo Pro.
+- Educational guide integration into browser-local Demo Pro, plus simulated cash deposits, withdrawals, concept, seserahan, discussion, and mini invitation.
 
 ## Applied ONLY in the Neon development branch
 
 1. database/migrations/20261009_finance_ledger.sql
 2. database/migrations/20261009_partner_access.sql
 3. database/migrations/20261009_agenda_calendar.sql
+4. database/migrations/20261009_wedding_companion.sql
+5. database/migrations/20261009_invitation_pages.sql
+6. database/migrations/20261009_pending_pin.sql
 
 **Important dev-schema detail:** the development branch initially created license_sessions.partner_id with ON DELETE SET NULL; the committed production migration uses ON DELETE CASCADE instead. An explicit actor_kind check additionally prevents invalid partner sessions from becoming owner sessions. Reconcile the development constraint before security testing. Do not use development as a direct production schema copy.
 
 ## Not implemented / release blockers
 
-- Exact end-to-end validation of double-submission, concurrent license/partner claims, revocation, payment trigger and financial correction.
+- Full end-to-end validation of double-submission, concurrent partner/PIN claims, revocation, payment trigger, and financial correction; no production feature QA has occurred.
 - E2E verification of Neon OIDC bridge, storage bridge and private documents using the actual Vercel runtime.
-- Production-ready access recovery: the inherited PR #4 email-first PIN rotation still needs a pending credential flow.
-- Actual shared finance ledger parity in Demo Pro (it currently has its original local simulation).
-- Additional requested modules: full visual concept/mood board, seserahan planner, mini digital invitation, Deep Talk/decisions, richer staff permissions, admin guide/template editing, complete print/PDF/Excel exports.
+- A pending-PIN recovery flow is now coded: old access remains valid until the replacement is claimed. Still needs concurrency and full email failure testing.
+- Demo Pro has local cash-movement simulation, but its implementation is not yet the exact same reusable component and storage adapter as production.
+- New modules coded: concept and URL-backed inspiration board, seserahan, joint decisions/comments, opt-in invitation, event editor, CSV exports and print-to-PDF summary.
+- Still incomplete: direct image upload for mood board, full spreadsheet XLSX download, advanced vendor comparisons, rich staff permissions, admin editing of guidance/templates, and reusable demo/production feature parity.
 - Full mobile browser/Instagram in-app/PWA QA, accessibility audit, performance/limits audit for 250 weddings.
 - Controlled checkout-email-admin-license activation test without issuing access to a real purchaser.
 - Final CI pass for the final commit and exact one-time production deployment.
@@ -53,6 +57,14 @@
 8. Merge once, trigger one production deploy, verify its commit matches and deployment is READY.
 9. Smoke test /api/health, login, partner, cash, agenda, checklist, purchase, email, RSVP, documents, Day-H and PWA.
 10. If any release gate fails, do not call it ready; use rollback plan.
+
+## October 9 follow-up
+
+- New companion and invitation tables were created only on Neon development branch, not production.
+- CI TypeScript and Next.js builds passed on previous commits; final branch head must pass again.
+- Public invitation is strictly opt-in and uses an unguessable UUID link, with guests responding via separately signed RSVP links.
+- CSV exports use authenticated wedding scope and sanitize spreadsheet formula beginnings.
+- Existing production deploy and GitHub main must remain unchanged until final release validation.
 
 ## Current production
 
