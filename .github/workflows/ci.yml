@@ -29,3 +29,16 @@ jobs:
         run: env -u DATABASE_URL npm run build
       - name: Production-parity build
         run: npm run build
+
+      - name: Install Chromium smoke test dependencies
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.55.1
+          npx playwright install --with-deps chromium
+      - name: Run real-browser Demo Pro smoke
+        run: |
+          npm run start -- -p 3000 > /tmp/menujukita-ci-server.log 2>&1 &
+          for i in $(seq 1 50); do
+            if curl -fsS http://127.0.0.1:3000/demo -o /dev/null; then break; fi
+            sleep 2
+          done
+          node scripts/smoke-demo.cjs
