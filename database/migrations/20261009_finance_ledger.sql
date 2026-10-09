@@ -45,11 +45,9 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-DROP TRIGGER IF EXISTS trg_mk_sync_vendor_cash_update ON payments;
-CREATE TRIGGER trg_mk_sync_vendor_cash_update
+CREATE OR REPLACE TRIGGER trg_mk_sync_vendor_cash_update
 AFTER UPDATE OF status,amount,paid_at ON payments
 FOR EACH ROW EXECUTE FUNCTION mk_sync_vendor_cash_entry();
-DROP TRIGGER IF EXISTS trg_mk_sync_vendor_cash_insert ON payments;
-CREATE TRIGGER trg_mk_sync_vendor_cash_insert
+CREATE OR REPLACE TRIGGER trg_mk_sync_vendor_cash_insert
 AFTER INSERT ON payments
 FOR EACH ROW EXECUTE FUNCTION mk_sync_vendor_cash_entry();
