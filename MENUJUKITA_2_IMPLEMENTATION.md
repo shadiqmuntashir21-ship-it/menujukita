@@ -20,7 +20,7 @@
 - Non-destructive, auditable cash ledger for deposits/withdrawals/refunds/vendor payments; vendor payments synchronized by database triggers.
 - Joint calendar displaying existing tasks, payments, wedding events, and rundown plus writable custom agenda.
 - Separate partner identity with one-time link, personal six-digit PIN, scoped session and revocation.
-- Educational guide integration into browser-local Demo Pro, plus simulated cash deposits, withdrawals, concept, seserahan, discussion, and mini invitation.
+- Educational guide integration into browser-local Demo Pro, plus simulated cash deposits, withdrawals, concept, seserahan, and discussion.
 
 ## Applied ONLY in the Neon development branch
 
@@ -28,8 +28,7 @@
 2. database/migrations/20261009_partner_access.sql
 3. database/migrations/20261009_agenda_calendar.sql
 4. database/migrations/20261009_wedding_companion.sql
-5. database/migrations/20261009_invitation_pages.sql
-6. database/migrations/20261009_pending_pin.sql
+5. database/migrations/20261009_pending_pin.sql
 
 **Important dev-schema detail:** the development branch initially created license_sessions.partner_id with ON DELETE SET NULL; the committed production migration uses ON DELETE CASCADE instead. An explicit actor_kind check additionally prevents invalid partner sessions from becoming owner sessions. Reconcile the development constraint before security testing. Do not use development as a direct production schema copy.
 
@@ -39,7 +38,7 @@
 - E2E verification of Neon OIDC bridge, storage bridge and private documents using the actual Vercel runtime.
 - A pending-PIN recovery flow is now coded: old access remains valid until the replacement is claimed. Still needs concurrency and full email failure testing.
 - Demo Pro has local cash-movement simulation, but its implementation is not yet the exact same reusable component and storage adapter as production.
-- New modules coded: concept and URL-backed inspiration board, seserahan, joint decisions/comments, opt-in invitation, event editor, CSV exports and print-to-PDF summary.
+- New modules coded: concept and URL-backed inspiration board, seserahan, joint decisions/comments, event editor, CSV exports and print-to-PDF summary.
 - Still incomplete: direct image upload for mood board, full spreadsheet XLSX download, advanced vendor comparisons, rich staff permissions, admin editing of guidance/templates, and reusable demo/production feature parity.
 - Full mobile browser/Instagram in-app/PWA QA, accessibility audit, performance/limits audit for 250 weddings.
 - Controlled checkout-email-admin-license activation test without issuing access to a real purchaser.
@@ -60,12 +59,16 @@
 
 ## October 9 follow-up
 
-- New companion and invitation tables were created only on Neon development branch, not production.
+- New companion tables were created only on Neon development branch, not production. An unused wedding_invitation_pages table exists in the development branch from earlier experiments; it is not read by application code and is excluded from release migrations. It will only be dropped with explicit approval after verification.
 - CI TypeScript and Next.js builds passed on previous commits; final branch head must pass again.
-- Public invitation is strictly opt-in and uses an unguessable UUID link, with guests responding via separately signed RSVP links.
+- Digital invitation feature was explicitly removed on request. Event dates remain editable in Wedding Settings; individual RSVP links remain for attendance management.
 - CSV exports use authenticated wedding scope and sanitize spreadsheet formula beginnings.
 - Existing production deploy and GitHub main must remain unchanged until final release validation.
 
 ## Current production
 
 Not altered in this feature branch. Never reset or seed customer production data merely to test UI.
+
+## Scope update: no digital invitations
+
+Digital invitation design, public shareable wedding page, publication settings, Demo Pro invitation, and their migration were removed by request. Keep event schedule/calendar, guest list, privately signed RSVP confirmation links, seating, wedding documents, and rundown. Do not reintroduce a public digital invitation as part of this project unless requested.
