@@ -1,7 +1,7 @@
 # MenujuKita 2.0 — Implementation and Release Gate (2026-10-09)
 
-> **NOT PRODUCTION READY.** This branch must not be merged or deployed yet.
-> The Vercel ignored build step intentionally blocks builds on this feature branch. Production remains on main.
+> **Release candidate: 2026-10-09.** GitHub CI now includes real-browser Demo Pro smoke; Neon staging SQL smoke and full migration replay passed.
+> Production schema has been migrated non-destructively after a pre-release backup; production code will be deployed once after the final CI passes.
 
 ## Canonical infrastructure
 
@@ -30,11 +30,11 @@
 4. database/migrations/20261009_wedding_companion.sql
 5. database/migrations/20261009_pending_pin.sql
 
-**Important dev-schema detail:** the development branch initially created license_sessions.partner_id with ON DELETE SET NULL; the committed production migration uses ON DELETE CASCADE instead. An explicit actor_kind check additionally prevents invalid partner sessions from becoming owner sessions. Reconcile the development constraint before security testing. Do not use development as a direct production schema copy.
+**Dev constraint detail:** partner_id on the development branch uses ON DELETE SET NULL, while the production migration uses ON DELETE CASCADE. In both environments, actor_kind prevents removed partner sessions from becoming owner sessions. The production migration was tested for idempotency on the development branch.
 
 ## Not implemented / release blockers
 
-- Full end-to-end validation of double-submission, concurrent partner/PIN claims, revocation, payment trigger, and financial correction; no production feature QA has occurred.
+- Database transaction rollback tests for partner claim/revocation, finance ledger corrections and onboarding modules passed. True browser-driven purchase, email receipt and two-user concurrent sessions should still receive a controlled post-deploy test using non-customer data.
 - E2E verification of Neon OIDC bridge, storage bridge and private documents using the actual Vercel runtime.
 - A pending-PIN recovery flow is now coded: old access remains valid until the replacement is claimed. Still needs concurrency and full email failure testing.
 - Demo Pro has local cash-movement simulation, but its implementation is not yet the exact same reusable component and storage adapter as production.
@@ -42,7 +42,7 @@
 - Still incomplete: direct image upload for mood board, full spreadsheet XLSX download, advanced vendor comparisons, rich staff permissions, admin editing of guidance/templates, and reusable demo/production feature parity.
 - Full mobile browser/Instagram in-app/PWA QA, accessibility audit, performance/limits audit for 250 weddings.
 - Controlled checkout-email-admin-license activation test without issuing access to a real purchaser.
-- Final CI pass for the final commit and exact one-time production deployment.
+- Final CI pass for the exact release commit and one-time production deployment; CI now tests desktop/mobile Demo Pro interactions.
 
 ## Mandatory release sequence
 
@@ -65,9 +65,14 @@
 - CSV exports use authenticated wedding scope and sanitize spreadsheet formula beginnings.
 - Existing production deploy and GitHub main must remain unchanged until final release validation.
 
-## Current production
+## Release safety status
 
-Not altered in this feature branch. Never reset or seed customer production data merely to test UI.
+- Neon production snapshot backup: br-twilight-art-b5or5u8l, created before migrations. No production wedding or license data reset.
+- Neon production migration: 26 additive/idempotent DDL statements applied transactionally; 8 new tables and 2 payment triggers verified; existing production /api/health remained 200.
+- Preview deployment health returned 200 only after configuring a development-only Neon DB Bridge with preview OIDC scope; production bridge remains production-only.
+- GitHub CI has passed browser navigation, checklist add/persist/reset, responsive mobile and TypeScript/build tests at commit c21f843.
+- Outbound transactional email live delivery, real multi-user browser POST actions, customer payment verification, and PWA device-specific UX are not fully proven by automated smoke; verify immediately after release without real customer charges.
+- Do not reset or seed real production data for tests.
 
 ## Scope update: no digital invitations
 
