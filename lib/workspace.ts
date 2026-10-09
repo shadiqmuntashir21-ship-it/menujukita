@@ -15,11 +15,12 @@ export async function getWorkspaceContext(){
   }
   const license=await getLicenseSession();
   if(!license)return null;
-  const actor=`license:${license.license_id}`;
+  const actor=license.partner_id?`partner:${license.partner_id}`:`license:${license.license_id}`;
   if(!license.wedding_id)return {db,wedding:null,session:{user:{id:actor,name:"MenujuKita User",email:null}},admin:false,license};
-  const rows=await db`SELECT w.*,l.status license_status,'owner'::text role,true can_view_budget
+  const rows=await db`SELECT w.*,l.status license_status,
+    CASE WHEN ${license.partner_id||null}::uuid IS NULL THEN 'owner' ELSE 'partner' END::text role,true can_view_budget
     FROM weddings w JOIN licenses l ON l.wedding_id=w.id WHERE w.id=${license.wedding_id} AND l.id=${license.license_id} AND w.status='active' LIMIT 1`;
-  return {db,wedding:(rows[0]||null) as any,session:{user:{id:actor,name:rows[0]?`${rows[0].couple_one_name} & ${rows[0].couple_two_name}`:"MenujuKita User",email:null}},admin:false,license};
+  return {db,wedding:(rows[0]||null) as any,session:{user:{id:actor,name:license.partner_name|| (rows[0]?`${rows[0].couple_one_name} & ${rows[0].couple_two_name}`:"MenujuKita User"),email:null}},admin:false,license};
 }
 export async function requireWorkspace(){
   const ctx:any=await getWorkspaceContext();
