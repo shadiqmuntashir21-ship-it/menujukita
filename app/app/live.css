@@ -46,3 +46,17 @@
  .vendor-price strong,.guest-status b{text-align:left}
  .plan-phase-group>summary{padding:14px}
 }
+
+
+/* MenujuKita desktop secondary navigation. Mobile bottom sheet is styled separately. */
+@media (min-width:761px) {
+ .studio-sheet-backdrop{display:block;position:fixed;inset:0;z-index:72;border:0;background:rgba(17,33,24,.29);backdrop-filter:blur(2px)}
+ .studio-more-sheet{display:block;position:fixed;z-index:73;left:clamp(96px,9vw,155px);top:clamp(54px,7vh,100px);bottom:32px;width:min(450px,calc(100vw - 180px));overflow-y:auto;border:1px solid var(--line);border-radius:24px;padding:22px;background:#fffdf9;box-shadow:0 28px 85px rgba(24,30,27,.2)}
+ .studio-more-sheet .sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+ .studio-more-sheet .sheet-head small{color:var(--muted);font-size:11px;letter-spacing:.1em}
+ .studio-more-sheet .sheet-head h3{margin:4px 0}
+ .studio-more-sheet .more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .studio-more-sheet .more-grid button,.studio-more-sheet .more-grid a{display:flex;align-items:center;gap:9px;min-width:0;border:1px solid var(--line);border-radius:15px;padding:13px;background:white;text-align:left;font-size:13px;font-weight:650;cursor:pointer;color:var(--ink)}
+ .studio-more-sheet .more-grid button:hover,.studio-more-sheet .more-grid a:hover{background:var(--cream)}
+ .studio-more-sheet .more-grid button.active{background:var(--forest);color:#fff}
+}
