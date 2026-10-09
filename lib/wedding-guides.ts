@@ -841,8 +841,8 @@ export function templateTasks(planningStyle:string, weddingDate:string|null){
    const date=new Date(weddingDate+"T12:00:00Z");
    date.setUTCDate(date.getUTCDate()-t.days);
    const recommended=date.toISOString().slice(0,10);
-   // Do not flood couples with already-overdue starter tasks.
-   dueDate=recommended<today?today:recommended;
+   // When the suggested timing has passed, let the couple choose a new date instead of marking 40+ tasks due today.
+   dueDate=recommended<today?null:recommended;
   }
   return {...t,sortOrder:i,dueDate};
  });
