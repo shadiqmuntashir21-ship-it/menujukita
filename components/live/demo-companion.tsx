@@ -4,10 +4,15 @@ import {HeartHandshake,Palette,Gift,Plus} from "lucide-react";
 type Kind="concept"|"gifts"|"decisions";
 type Item={id:number;title:string;note:string;amount:number;quantity:number;purchased:boolean;status:string;imageUrl:string;comments:string[]};
 type DemoExtras={theme:string;palette:string;items:Record<Kind,Item[]>};
-const defaults:DemoExtras={theme:"Modern Garden",palette:"Ivory, sage, champagne",
- items:{concept:[{id:1,title:"Pelaminan taman minimalis",note:"Bunga putih dan daun hijau",amount:0,quantity:1,purchased:false,status:"",imageUrl:"",comments:[]}],
- gifts:[{id:1,title:"Perlengkapan ibadah",note:"Periksa pilihan warna",amount:750000,quantity:1,purchased:false,status:"",imageUrl:"",comments:[]},{id:2,title:"Busana seserahan",note:"Sudah dipilih bersama",amount:1200000,quantity:1,purchased:true,status:"",imageUrl:"",comments:[]}],
- decisions:[{id:1,title:"Pilih venue acara",note:"Bandingkan lokasi dan kapasitas",amount:0,quantity:1,purchased:false,status:"discussing",imageUrl:"",comments:["Alya: suka lokasi dekat keluarga","Raka: cek rincian biaya dulu"]]}};
+const defaults:DemoExtras={
+ theme:"Modern Garden",
+ palette:"Ivory, sage, champagne",
+ items:{
+  concept:[{id:1,title:"Pelaminan taman minimalis",note:"Bunga putih dan daun hijau",amount:0,quantity:1,purchased:false,status:"",imageUrl:"",comments:[]}],
+  gifts:[{id:1,title:"Perlengkapan ibadah",note:"Periksa pilihan warna",amount:750000,quantity:1,purchased:false,status:"",imageUrl:"",comments:[]},{id:2,title:"Busana seserahan",note:"Sudah dipilih bersama",amount:1200000,quantity:1,purchased:true,status:"",imageUrl:"",comments:[]}],
+  decisions:[{id:1,title:"Pilih venue acara",note:"Bandingkan lokasi dan kapasitas",amount:0,quantity:1,purchased:false,status:"discussing",imageUrl:"",comments:["Alya: suka lokasi dekat keluarga","Raka: cek rincian biaya dulu"]}]
+ }
+};
 const caption:Record<Kind,string>={concept:"Konsep & Mood Board",gifts:"Daftar Seserahan",decisions:"Diskusi Berdua"};
 export default function DemoCompanion({view}:{view:Kind}){
  const[state,setState]=useState<DemoExtras>(defaults),[ready,setReady]=useState(false);
