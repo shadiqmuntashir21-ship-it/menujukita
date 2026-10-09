@@ -9,9 +9,10 @@ export type DemoDocument={id:number;name:string;category:string;size:string;note
 export type DemoMember={id:number;name:string;role:string;access:string;phone:string};
 export type DemoDetails={venue:string;ceremony:string;reception:string;theme:string;dressCode:string;hashtag:string;planner:string;emergencyContact:string};
 
+export type DemoCashEntry={id:number;kind:"deposit"|"withdrawal"|"refund";contributor:string;amount:number;date:string;note:string};
 export type DemoState={
  couple:string;date:string;city:string;days:number;budget:number;reserve:number;targetGuests:number;
- tasks:DemoTask[];budgetItems:DemoBudgetItem[];vendors:DemoVendor[];payments:DemoPayment[];guests:DemoGuest[];
+ tasks:DemoTask[];budgetItems:DemoBudgetItem[];vendors:DemoVendor[];payments:DemoPayment[];guests:DemoGuest[];cashEntries:DemoCashEntry[];
  rundown:DemoRundown[];seating:DemoSeat[];documents:DemoDocument[];members:DemoMember[];details:DemoDetails;
 };
 
@@ -99,5 +100,6 @@ const members:DemoMember[]=[
 export const demoSeed:DemoState={
  couple:"Alya & Raka",date:"14 Februari 2027",city:"Jakarta",days:134,budget:220000000,reserve:8000000,targetGuests:350,
  tasks,budgetItems,vendors,payments,guests,rundown,seating,documents,members,
+ cashEntries:[{id:1,kind:"deposit",contributor:"Alya",amount:90000000,date:"2026-10-01",note:"Tabungan awal"},{id:2,kind:"deposit",contributor:"Raka",amount:65000000,date:"2026-10-06",note:"Kontribusi pasangan"},{id:3,kind:"deposit",contributor:"Keluarga",amount:25000000,date:"2026-10-08",note:"Bantuan keluarga"}],
  details:{venue:"The Garden Hall",ceremony:"Akad",reception:"Garden Reception",theme:"Modern Garden · Ivory & Sage",dressCode:"Formal · Earth Tone",hashtag:"#MenujuAlyaRaka",planner:"Nadia / Teman Wedding Organizer",emergencyContact:"Nadia · 0812 1111 0003"}
 };
