@@ -11,11 +11,11 @@ const num=(f:FormData,k:string)=>Math.max(0,Number(f.get(k)||0));
 const clamp=(n:number,min:number,max:number)=>Math.min(max,Math.max(min,n));
 
 export async function updateWeddingSettings(f:FormData){
- const{db,wedding,session}=await requireWorkspace();const one=text(f,"couple_one_name"),two=text(f,"couple_two_name"),date=text(f,"wedding_date");if(!one||!two||!date)return;
+ const{db,wedding,session}=await requireWorkspace();const one=text(f,"couple_one_name"),two=text(f,"couple_two_name"),date=text(f,"wedding_date");if(!one||!two|| (date&&!/^\d{4}-\d{2}-\d{2}$/.test(date)))return;
  const style=text(f,"planning_style");if(!["couple","family","couple_wo","wo"].includes(style))return;
  const coverStyle=text(f,"cover_style")||"full",coverPositionY=clamp(Number(f.get("cover_position_y")||50),0,100),coverOverlay=clamp(Number(f.get("cover_overlay")||0.48),0.18,0.78);
  const safeCoverStyle=["full","soft","minimal"].includes(coverStyle)?coverStyle:"full";
- await db`UPDATE weddings SET couple_one_name=${one},couple_two_name=${two},wedding_date=${date},city=${text(f,"city")||null},guest_target=${Math.min(5000,num(f,"guest_target"))},planning_style=${style},cover_position_y=${coverPositionY},cover_overlay=${coverOverlay},cover_style=${safeCoverStyle},updated_at=now() WHERE id=${wedding.id}`;
+ await db`UPDATE weddings SET couple_one_name=${one},couple_two_name=${two},wedding_date=${date||null},city=${text(f,"city")||null},guest_target=${Math.min(5000,num(f,"guest_target"))},planning_style=${style},cover_position_y=${coverPositionY},cover_overlay=${coverOverlay},cover_style=${safeCoverStyle},updated_at=now() WHERE id=${wedding.id}`;
  await recordActivity(db,wedding.id,session.user.id,"wedding_settings_updated","wedding",wedding.id,{coupleOne:one,coupleTwo:two,date,coverPositionY,coverOverlay,safeCoverStyle});revalidatePath("/app");
 }
 
