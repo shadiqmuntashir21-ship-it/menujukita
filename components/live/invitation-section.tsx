@@ -1,5 +1,6 @@
 import {BookOpen,ExternalLink,Heart,Link2} from "lucide-react";
 import {saveInvitationSettings} from "@/app/app/invitation-actions";
+import EventsEditor from "@/components/live/events-editor";
 export default function InvitationSection({invitation,events,couple}:{invitation:any;events:any[];couple:string}){
  const publicUrl=invitation?.public_id?"/undangan/"+invitation.public_id:null;
  const published=Boolean(invitation?.published);
@@ -17,6 +18,7 @@ export default function InvitationSection({invitation,events,couple}:{invitation
  </div>
  <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}><span className={"status-dot status-"+(published?"done":"todo")}>{published?"Sudah dipublikasikan":"Belum publik"}</span>{published&&publicUrl&&<a href={publicUrl} target="_blank" rel="noopener noreferrer" className="btn"><ExternalLink size={16}/> Buka undangan</a>}</div>
  </div>
+ <EventsEditor events={events}/>
  <details className="composer-card" open={!invitation}><summary><span>Atur isi dan publikasi</span><small>Persetujuan publikasi ada di tangan kalian</small></summary>
  <form action={saveInvitationSettings} className="editor-form">
  <label className="field"><span>Nuansa visual</span><select className="input" name="theme" defaultValue={invitation?.theme||"sage"}><option value="sage">Sage hijau lembut</option><option value="ivory">Ivory klasik</option><option value="rose">Rose hangat</option></select></label>
