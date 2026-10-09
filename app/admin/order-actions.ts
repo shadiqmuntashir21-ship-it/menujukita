@@ -7,20 +7,27 @@ import { hashPin,logAccess,newPinSalt,sha256 } from "@/lib/session";
 import { addOrderActivity,ensureCommerceSchema,newCustomerPin,newLicenseCode,sendAccessEmail,sendNeedsConfirmationEmail } from "@/lib/commerce";
 
 const refresh=(id?:string)=>{revalidatePath("/admin");revalidatePath("/admin/orders");if(id)revalidatePath("/admin/orders/"+id)};
+
+async function stageAndEmailReplacement(db:any,order:any,licenseId:string){
+ const pin=newCustomerPin(),salt=newPinSalt(),hash=hashPin(pin,salt);
+ // Stage first: the customer can use either the current PIN or replacement for seven days.
+ await db`UPDATE licenses SET pending_pin_hash=${hash},pending_pin_salt=${salt},pending_pin_hint=${pin.slice(-2)},pending_pin_expires_at=now()+interval '7 days',updated_at=now() WHERE id=${licenseId}`;
+ const sent=await sendAccessEmail(db,order,order.license_code,pin,true);
+ if(!sent){
+  // Keep old credentials and live sessions untouched if provider rejects the message.
+  await db`UPDATE licenses SET pending_pin_hash=NULL,pending_pin_salt=NULL,pending_pin_hint=NULL,pending_pin_expires_at=NULL
+  WHERE id=${licenseId} AND pending_pin_hash=${hash}`;
+ }
+ return sent;
+}
+
 export async function confirmPayment(formData:FormData){
  const{db}=await requireAdmin();await ensureCommerceSchema(db);const id=String(formData.get("id")||"");
  const orders=await db`SELECT o.*,pm.label payment_label FROM orders o LEFT JOIN payment_methods pm ON pm.code=o.payment_method_code WHERE o.id=${id} LIMIT 1`,order:any=orders[0];if(!order)return;
  if(["access_sent","completed"].includes(order.status)){refresh(id);return}
  if(order.license_id&&order.license_code){
-  // Only rotate an existing customer's PIN after the provider accepts the replacement email.
-  // A failed email must never lock the customer out of their existing access.
-  const pin=newCustomerPin(),salt=newPinSalt();
-  const sent=await sendAccessEmail(db,order,order.license_code,pin,true);
-  if(sent){
-    await db`UPDATE licenses SET pin_hash=${hashPin(pin,salt)},pin_salt=${salt},pin_hint=${pin.slice(-2)},pin_updated_at=now(),updated_at=now() WHERE id=${order.license_id}`;
-    await db`UPDATE license_sessions SET revoked_at=now() WHERE license_id=${order.license_id} AND revoked_at IS NULL`;
-    await db`UPDATE orders SET status='access_sent',access_sent_at=now(),updated_at=now() WHERE id=${id}`;
-  }
+  const sent=await stageAndEmailReplacement(db,order,String(order.license_id));
+  if(sent)await db`UPDATE orders SET status='access_sent',access_sent_at=now(),updated_at=now() WHERE id=${id}`;
   refresh(id);return;
  }
  if(!["awaiting_verification","needs_confirmation","payment_verified"].includes(order.status))return;
@@ -61,14 +68,11 @@ export async function rejectPayment(formData:FormData){
 export async function resendAccess(formData:FormData){
  const{db}=await requireAdmin();await ensureCommerceSchema(db);const id=String(formData.get("id")||"");
  const rows=await db`SELECT o.*,l.id actual_license_id FROM orders o JOIN licenses l ON l.id=o.license_id WHERE o.id=${id} AND o.license_code IS NOT NULL LIMIT 1`,order:any=rows[0];if(!order)return;
- // Do not invalidate the current PIN or active sessions when email delivery fails.
- const pin=newCustomerPin(),salt=newPinSalt();
- const sent=await sendAccessEmail(db,order,order.license_code,pin,true);
+ // A replacement PIN stays pending until the customer signs in with it successfully.
+ const sent=await stageAndEmailReplacement(db,order,String(order.actual_license_id));
  if(sent){
-  await db`UPDATE licenses SET pin_hash=${hashPin(pin,salt)},pin_salt=${salt},pin_hint=${pin.slice(-2)},pin_updated_at=now(),updated_at=now() WHERE id=${order.actual_license_id}`;
-  await db`UPDATE license_sessions SET revoked_at=now() WHERE license_id=${order.actual_license_id} AND revoked_at IS NULL`;
   await db`UPDATE orders SET status='access_sent',access_sent_at=now(),updated_at=now() WHERE id=${id}`;
-  await addOrderActivity(db,id,"access_resent",{resetPin:true});
+  await addOrderActivity(db,id,"access_resent",{pendingActivation:true});
  }
  refresh(id);
 }
