@@ -39,6 +39,7 @@ export default async function Page(){
   db`SELECT a.*,COALESCE(m.display_name,m.invited_email,CASE WHEN a.auth_user_id='admin' THEN 'MenujuKita Admin' ELSE 'Wedding access' END) actor_name FROM activity_logs a LEFT JOIN wedding_members m ON m.wedding_id=a.wedding_id AND m.auth_user_id=a.auth_user_id WHERE a.wedding_id=${wedding.id} ORDER BY a.created_at DESC LIMIT 40`
  ]);
  const {entries:cashEntries,summary:finance}=await loadWeddingFinance(db,String(wedding.id),n(wedding.budget_total),n(wedding.reserve_buffer));
+ const partnerAccess=await db`SELECT status,display_name FROM wedding_partner_access WHERE wedding_id=${wedding.id} LIMIT 1`;
  const payments=(paymentsRaw as any[]).map(p=>({...p,status:p.display_status||p.status})),total=tasks.length,done=tasks.filter((t:any)=>t.status==="done").length,progress=total?Math.round(done/total*100):0;
  const days=wedding.wedding_date?Math.max(0,diffDays(wedding.wedding_date)):null,planned=(budgetItems as any[]).reduce((s,b)=>s+n(b.planned_amount),0),actual=(budgetItems as any[]).reduce((s,b)=>s+n(b.actual_amount||b.planned_amount),0);
  const paid=finance.vendorPayments;
@@ -62,7 +63,7 @@ export default async function Page(){
   vendors={<VendorsSection vendors={vendors as any[]} canEdit/>}
   seating={<SeatingSection tables={seatingTables as any[]} assignments={seatingAssignments as any[]} guests={guests as any[]} events={events as any[]} canEdit/>}
   vault={<DocumentsSection documents={documents as any[]} usedBytes={usedDocumentBytes} canEdit canBudget weddingId={String(wedding.id)}/>}
-  team={<MembersSection members={members as any[]} invites={[]} role="owner"/>}
+  team={<MembersSection members={members as any[]} invites={[]} role={admin?"owner":license?.partner_id?"partner":"owner"} partnerStatus={partnerAccess[0]?.status} partnerName={partnerAccess[0]?.display_name}/>}
   notifications={<NotificationsSection items={notifications}/>}
   activity={<ActivitySection items={activity as any[]}/>}
   settings={<SettingsSection wedding={wedding} licenseHint={license?.code_hint} admin={Boolean(admin)} coverUrl={coverUrl}/>}
