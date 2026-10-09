@@ -1,5 +1,5 @@
 "use client";
-import { CheckCircle2,HeartPulse,ImagePlus,Sparkles } from "lucide-react";
+import { ArrowRight,BookOpen,CheckCircle2,HeartPulse,ImagePlus,Sparkles } from "lucide-react";
 import { money,dateLabel } from "./shared";
 
 const FALLBACK_COVER="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1800&q=88";
@@ -12,7 +12,7 @@ export default function HomeSection({wedding,metrics,priorities,payments,coverUr
  return <section id="home" className="studio-home premium-home">
   <div className="couple-cover-hero" style={{backgroundImage:`linear-gradient(rgba(18,25,22,${overlay*.28}),rgba(18,25,22,${Math.min(.88,overlay+.2)})),url("${coverUrl||FALLBACK_COVER}")`,backgroundPosition:position}}>
    <div className="cover-top"><span className="micro-label light-label">RUANG WEDDING KALIAN</span><button className="cover-edit" onClick={openSettings}><ImagePlus size={15}/>Ganti foto</button></div>
-   <div className="cover-content"><div><small>{wedding.city||"Menuju hari kalian"} · {dateLabel(wedding.wedding_date)}</small><h1 className="serif">{wedding.couple_one_name} <em>&</em> {wedding.couple_two_name}</h1><p>{metrics.days===0?"Hari yang kalian tunggu akhirnya tiba.":<><strong>{metrics.days} hari lagi</strong> menuju hari kalian.</>}</p><div className="cover-progress"><span><i style={{width:metrics.progress+"%"}}/></span><b>{metrics.progress}% siap</b></div></div>
+   <div className="cover-content"><div><small>{wedding.city||"Menuju hari kalian"} · {dateLabel(wedding.wedding_date)}</small><h1 className="serif">{wedding.couple_one_name} <em>&</em> {wedding.couple_two_name}</h1><p>{metrics.days===null?"Tanggal wedding belum ditentukan. Kalian bisa mengaturnya nanti.":metrics.days===0?"Hari yang kalian tunggu akhirnya tiba.":<><strong>{metrics.days} hari lagi</strong> menuju hari kalian.</>}</p><div className="cover-progress"><span><i style={{width:metrics.progress+"%"}}/></span><b>{metrics.progress}% siap</b></div></div>
     <div className="health-orbit cover-health" style={{"--health":metrics.health} as any}><div><b>{metrics.health}</b><span>Wedding Health</span><small>{metrics.healthLabel}</small></div></div>
    </div>
   </div>
@@ -28,6 +28,7 @@ export default function HomeSection({wedding,metrics,priorities,payments,coverUr
    </aside>
   </div>
 
+  <button type="button" className="studio-panel" style={{display:"flex",alignItems:"center",gap:14,padding:18,borderRadius:20,background:"#f1f5ed",width:"100%",border:"1px solid #dfe8dc",textAlign:"left",color:"#2b473a",cursor:"pointer"}} onClick={()=>window.dispatchEvent(new CustomEvent("menujukita:navigate",{detail:"guide"}))}><BookOpen size={22}/><span style={{display:"grid",gap:4,flex:1}}><b>Bingung mulai dari mana?</b><small>Buka Panduan MenujuKita. Pelajari langkah persiapan sambil langsung mengerjakannya.</small></span><ArrowRight size={20}/></button>
   <div className="journey-glance premium-journey"><div><small>FONDASI</small><b>Setup wedding</b></div><span/><div><small>SEKARANG</small><b>Perencanaan</b></div><span/><div><small>BERIKUTNYA</small><b>Tamu & vendor</b></div><span/><div><small>AKHIR</small><b>Day-H</b></div></div>
  </section>
 }
