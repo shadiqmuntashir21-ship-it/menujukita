@@ -27,10 +27,10 @@ export default async function Page({params,searchParams}:{params:Promise<{partyI
   const action=submitRsvp.bind(null,partyId,signature);
   return <main className="rsvp-page"><section className="rsvp-card">
     <div className="brand"><BrandLogo className="auth-logo"/></div>
-    <div className="rsvp-hero"><small>UNDANGAN UNTUK ANDA</small><h1 className="serif">{x.couple_one_name} & {x.couple_two_name}</h1><p>{new Intl.DateTimeFormat("id-ID",{dateStyle:"full"}).format(new Date(x.wedding_date))}{x.city?" · "+x.city:""}</p></div>
+    <div className="rsvp-hero"><small>KONFIRMASI KEHADIRAN</small><h1 className="serif">{x.couple_one_name} & {x.couple_two_name}</h1><p>{x.wedding_date?new Intl.DateTimeFormat("id-ID",{dateStyle:"full"}).format(new Date(x.wedding_date)):"Tanggal belum ditentukan"}{x.city?" · "+x.city:""}</p></div>
     {q.saved==="1"&&<div className="success-box">Terima kasih. Konfirmasi kehadiran sudah tersimpan.</div>}{q.error==="event"&&<div className="notice">Pilih minimal satu acara jika Anda akan hadir.</div>}{q.error==="rate"&&<div className="notice">Terlalu banyak percobaan RSVP. Coba lagi beberapa saat nanti.</div>}
     <form action={action} className="stack">
-      <div className="invitee"><small>Undangan untuk</small><h2>{x.party_name}</h2><span>Hingga {x.max_pax} orang</span></div>
+      <div className="invitee"><small>Konfirmasi untuk</small><h2>{x.party_name}</h2><span>Hingga {x.max_pax} orang</span></div>
       <label className="field"><span>Konfirmasi kehadiran</span><select className="input" name="status" defaultValue={x.rsvp_status==="attending"?"attending":x.rsvp_status==="not_attending"?"not_attending":"maybe"}><option value="attending">Ya, kami hadir</option><option value="not_attending">Tidak dapat hadir</option><option value="maybe">Belum pasti</option></select></label>
       <label className="field"><span>Jumlah yang hadir</span><input className="input" name="pax" type="number" min="0" max={Number(x.max_pax)} defaultValue={Number(x.actual_pax||x.max_pax||1)}/></label>
       {(events as any[]).length>0&&<div className="field"><span>Acara yang akan dihadiri</span><div className="event-choices">{(events as any[]).map(e=><label className="event-choice" key={e.id}><input type="checkbox" name="events" value={e.id} defaultChecked={hasSavedEvents?selected.has(String(e.id)):true}/><span><b>{e.name}</b><small>{e.start_time?String(e.start_time).slice(0,5):""}{e.location?" · "+e.location:""}</small></span></label>)}</div></div>}
