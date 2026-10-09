@@ -1,12 +1,12 @@
 "use client";
-import { useRef,useState } from "react";
+import { type ReactNode,useRef,useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImagePlus,LogOut,Settings,ShieldCheck,Trash2 } from "lucide-react";
 import { registerCoverPhoto,removeCoverPhoto,signOut,updateWeddingSettings } from "@/app/app/settings-actions";
 
 const FALLBACK="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1500&q=86";
 
-export default function SettingsSection({wedding,licenseHint,admin,coverUrl}:{wedding:any;licenseHint?:string;admin?:boolean;coverUrl?:string}){
+export default function SettingsSection({wedding,licenseHint,admin,coverUrl,eventsEditor}:{wedding:any;licenseHint?:string;admin?:boolean;coverUrl?:string;eventsEditor?:ReactNode}){
  const router=useRouter(),fileRef=useRef<HTMLInputElement>(null),[busy,setBusy]=useState(false),[error,setError]=useState("");
  async function uploadCover(){
   const file=fileRef.current?.files?.[0];if(!file)return;
@@ -39,5 +39,6 @@ export default function SettingsSection({wedding,licenseHint,admin,coverUrl}:{we
    </form></section>
    <aside className="panel studio-panel access-card"><ShieldCheck size={22}/><small className="muted">{admin?"MODE BANTUAN ADMIN":"AKSES WEDDING"}</small><h3>{admin?"Super Admin":"Lisensi ••••-"+(licenseHint||"----")}</h3><p className="muted">{admin?"Anda sedang membantu workspace customer. Semua perubahan tercatat di log audit.":"Akses wedding ini memakai Kode Lisensi + PIN. Tidak ada email/password yang perlu dikelola."}</p><form action={signOut}><button className="btn" style={{width:"100%"}}><LogOut size={16}/>{admin?"Kembali ke Admin":"Keluar dari MenujuKita"}</button></form></aside>
   </div>
+  {eventsEditor}
  </section>
 }
