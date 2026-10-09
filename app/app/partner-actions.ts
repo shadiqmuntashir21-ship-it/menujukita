@@ -42,7 +42,7 @@ export async function revokePartnerAccess(form:FormData){
 export async function acceptPartnerInvite(token:string,form:FormData){
  const name=String(form.get("name")||"").trim().slice(0,80),pin=String(form.get("pin")||"").trim();
  const target="/join-partner/"+encodeURIComponent(token);
- if(name.length<2||!/^[0-9]{6}$/.test(pin))redirect(target+"?error=data");
+ if(name.length<2||!/^[0-9]{6}$/.test(pin)||pin!==String(form.get("confirm_pin")||"").trim())redirect(target+"?error=data");
  if(!await rateLimit("partner-claim:"+sha256(token),6))redirect(target+"?error=limit");
  const db=sql();
  const rows=await db`SELECT p.id,p.wedding_id,p.license_id,l.pin_hash owner_pin_hash,l.pin_salt owner_pin_salt
