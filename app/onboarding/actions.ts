@@ -20,7 +20,9 @@ export async function activateWedding(f:FormData){
  const taskTemplates=templateTasks(planningStyle,weddingDate);
  const categories=["Venue","Catering","Decoration","Documentation","Attire","Makeup","Wedding Organizer","Entertainment","Invitation","Souvenir","Transportation","Accommodation","Ceremony / Adat","Miscellaneous"];
  const tx:any[]=[
-  db`INSERT INTO weddings(id,owner_auth_user_id,couple_one_name,couple_two_name,wedding_date,city,budget_total,available_funds,reserve_buffer,guest_target,planning_style,slug) VALUES(${weddingId},${actorId},${one},${two},${weddingDate},${city||null},${budget},0,${Math.round(budget*0.05)},${guests},${planningStyle},${slug})`,
+  db`INSERT INTO weddings(id,owner_auth_user_id,couple_one_name,couple_two_name,wedding_date,city,budget_total,available_funds,reserve_buffer,guest_target,planning_style,slug)
+    SELECT ${weddingId},${actorId},${one},${two},${weddingDate},${city||null},${budget},0,${Math.round(budget*0.05)},${guests},${planningStyle},${slug}
+    FROM licenses WHERE id=${lic.license_id} AND status='unused' AND wedding_id IS NULL RETURNING id`,
   db`INSERT INTO wedding_members(wedding_id,auth_user_id,display_name,role,can_view_budget,status,joined_at) VALUES(${weddingId},${actorId},${one+" & "+two},'owner',true,'active',now())`,
   db`UPDATE licenses SET status='active',wedding_id=${weddingId},activated_by_auth_user_id=${actorId},activated_at=now(),updated_at=now() WHERE id=${lic.license_id} AND status='unused' AND wedding_id IS NULL`,
   db`INSERT INTO wedding_events(wedding_id,event_type,name,event_date,start_time,sort_order) VALUES(${weddingId},'ceremony',${String(f.get("ceremony_name")||"Akad / Pemberkatan")},${weddingDate},'09:00',0)`,
