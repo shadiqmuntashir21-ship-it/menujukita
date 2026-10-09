@@ -38,7 +38,7 @@ export default function FinanceLedgerSection({entries,summary}:{entries:CashEntr
    <div className="studio-panel" style={{padding:20,borderRadius:20,display:"grid",gap:9,alignContent:"start"}}>
     <div style={{display:"flex",alignItems:"center",gap:8}}><BookOpen size={19}/><b>Apa beda anggaran dan tabungan?</b></div>
     <p style={{fontSize:13,lineHeight:1.7,margin:0}}><b>Anggaran</b> adalah rencana biaya. <b>Tabungan</b> adalah dana yang benar-benar disetor. <b>Saldo</b> ialah dana tersisa sesudah transaksi. Pembayaran vendor harus dicatat pada Jadwal Pembayaran—bukan sebagai penarikan manual kedua kalinya.</p>
-    <button type="button" className="btn" style={{justifySelf:"start"}} onClick={()=>window.dispatchEvent(new CustomEvent("menujukita:open-guide",{detail:"tabungan"}))||window.dispatchEvent(new CustomEvent("menujukita:navigate",{detail:"guide"}))}>Baca panduan tabungan <ChevronDown size={15}/></button>
+    <button type="button" className="btn" style={{justifySelf:"start"}} onClick={()=>{window.dispatchEvent(new CustomEvent("menujukita:open-guide",{detail:"tabungan"}));window.dispatchEvent(new CustomEvent("menujukita:navigate",{detail:"guide"}))}}>Baca panduan tabungan <ChevronDown size={15}/></button>
    </div>
   </div>
   <section className="studio-panel" style={{padding:20,borderRadius:20}}>
