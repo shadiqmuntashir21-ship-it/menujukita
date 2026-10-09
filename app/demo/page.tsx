@@ -55,7 +55,7 @@ export default function Demo(){
    {view==="settings"&&<DemoSettings data={data} setData={setData}/>}
    {view==="dayh"&&<DemoDayH data={data} setData={setData}/>}
    {view==="guide"&&<GuideSection/>}
-   {(["concept","gifts","decisions"] as const).includes(view as any)&&<DemoCompanion key={view} view={view as "concept"|"gifts"|"decisions"} couple={data.couple} date={data.date}/>}
+   {(["concept","gifts","decisions"] as const).includes(view as any)&&<DemoCompanion key={view} view={view as "concept"|"gifts"|"decisions"}/>}
   </main></div>
   <nav className="studio-mobile-nav">{nav.slice(0,4).map(([id,I,label])=><button key={id} className={view===id?"active":""} onClick={()=>go(id)}><I size={20}/><small>{label}</small></button>)}<button className={more?"active":""} onClick={()=>setMore(v=>!v)}><Menu size={20}/><small>Lainnya</small></button></nav>
   {more&&<><button className="studio-sheet-backdrop" onClick={()=>setMore(false)}/><aside className="studio-more-sheet"><div className="sheet-head"><div><small>DEMO PRO</small><h3>Semua ruang wedding</h3></div><button className="icon-button" onClick={()=>setMore(false)}><X size={18}/></button></div><div className="more-grid">{nav.slice(4).map(([id,I,label])=><button key={id} onClick={()=>go(id)} className={view===id?"active":""}><I size={19}/><span>{label}</span></button>)}</div></aside></>}
