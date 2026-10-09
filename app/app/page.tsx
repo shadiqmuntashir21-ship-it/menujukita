@@ -20,6 +20,7 @@ import CalendarSection from "@/components/live/calendar-section";
 import ConceptSection from "@/components/live/concept-section";
 import GiftsSection from "@/components/live/gifts-section";
 import DecisionsSection from "@/components/live/decisions-section";
+import InvitationSection from "@/components/live/invitation-section";
 
 export const dynamic="force-dynamic";
 const n=(v:any)=>Number(v||0);
@@ -38,7 +39,7 @@ export default async function Page(){
   db`SELECT r.*,m.display_name pic_name,v.name vendor_name FROM rundown_items r LEFT JOIN wedding_members m ON m.id=r.pic_member_id LEFT JOIN vendors v ON v.id=r.vendor_id WHERE r.wedding_id=${wedding.id} ORDER BY r.starts_at,r.sort_order`,
   db`SELECT * FROM documents WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`,
   db`SELECT id,display_name,invited_email,role,can_view_budget,status,joined_at FROM wedding_members WHERE wedding_id=${wedding.id} AND status<>'revoked' ORDER BY created_at`,
-  db`SELECT id,name,event_type,event_date,start_time FROM wedding_events WHERE wedding_id=${wedding.id} ORDER BY sort_order,event_date,start_time`,
+  db`SELECT id,name,event_type,event_date,start_time,end_time,location,map_url,is_public FROM wedding_events WHERE wedding_id=${wedding.id} ORDER BY sort_order,event_date,start_time`,
   db`SELECT st.*,we.name event_name FROM seating_tables st LEFT JOIN wedding_events we ON we.id=st.event_id WHERE st.wedding_id=${wedding.id} ORDER BY st.sort_order,st.created_at`,
   db`SELECT sa.*,g.name guest_name FROM seating_assignments sa JOIN guests g ON g.id=sa.guest_id WHERE sa.wedding_id=${wedding.id} ORDER BY sa.id`,
   db`SELECT a.*,COALESCE(m.display_name,m.invited_email,CASE WHEN a.auth_user_id='admin' THEN 'MenujuKita Admin' ELSE 'Wedding access' END) actor_name FROM activity_logs a LEFT JOIN wedding_members m ON m.wedding_id=a.wedding_id AND m.auth_user_id=a.auth_user_id WHERE a.wedding_id=${wedding.id} ORDER BY a.created_at DESC LIMIT 40`
@@ -47,6 +48,7 @@ export default async function Page(){
  const partnerAccess=await db`SELECT status,display_name FROM wedding_partner_access WHERE wedding_id=${wedding.id} LIMIT 1`;
  const agenda=await db`SELECT id,title,kind,happens_on,starts_at,location,note FROM wedding_agenda_entries WHERE wedding_id=${wedding.id} ORDER BY happens_on,starts_at LIMIT 500`;
  const calendarEvents=assembleWeddingCalendar({tasks:tasks as any[],payments:paymentsRaw as any[],events:events as any[],rundown:rundown as any[],agenda:agenda as any[]});
+ const [invitationSettings]=await db`SELECT * FROM wedding_invitation_pages WHERE wedding_id=${wedding.id} LIMIT 1`;
  const [conceptData,inspirations,gifts,decisions,decisionComments]=await Promise.all([
    db`SELECT * FROM wedding_concepts WHERE wedding_id=${wedding.id} LIMIT 1`,
    db`SELECT * FROM wedding_inspirations WHERE wedding_id=${wedding.id} ORDER BY created_at DESC LIMIT 60`,
@@ -87,5 +89,6 @@ export default async function Page(){
   concept={<ConceptSection concept={conceptData[0]||null} inspirations={inspirations as any[]}/>}
   gifts={<GiftsSection gifts={gifts as any[]}/>}
   decisions={<DecisionsSection decisions={decisions as any[]} comments={decisionComments as any[]}/>}
+  invitation={<InvitationSection invitation={invitationSettings||null} events={events as any[]} couple={wedding.couple_one_name+" & "+wedding.couple_two_name}/>}
  />
 }
