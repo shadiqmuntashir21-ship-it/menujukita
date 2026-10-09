@@ -44,6 +44,5 @@ export default function DemoCompanion({view}:{view:Kind}){
  <form action={f=>{const value=String(f.get("comment")||"").trim();if(value)patch(x.id,{comments:[...x.comments,value]})}} style={{display:"flex",gap:8}}><input className="input" name="comment" placeholder="Tanggapan pasangan" required/><button className="btn">Kirim</button></form></>}
  <button type="button" className="btn" onClick={()=>remove(x.id)} style={{justifySelf:"start"}}>Hapus simulasi</button>
  </article>)}</div>
- </>}
  </section>;
 }
