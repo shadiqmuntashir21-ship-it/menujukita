@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS wedding_partner_access (
  created_at timestamptz NOT NULL DEFAULT now(),
  updated_at timestamptz NOT NULL DEFAULT now()
 );
-ALTER TABLE license_sessions ADD COLUMN IF NOT EXISTS partner_id uuid REFERENCES wedding_partner_access(id) ON DELETE SET NULL;
+ALTER TABLE license_sessions ADD COLUMN IF NOT EXISTS partner_id uuid REFERENCES wedding_partner_access(id) ON DELETE CASCADE;
+ALTER TABLE license_sessions ADD COLUMN IF NOT EXISTS actor_kind text NOT NULL DEFAULT 'owner' CHECK(actor_kind IN ('owner','partner'));
 CREATE INDEX IF NOT EXISTS idx_partner_access_license ON wedding_partner_access(license_id,status);
 CREATE INDEX IF NOT EXISTS idx_license_sessions_partner ON license_sessions(partner_id);
