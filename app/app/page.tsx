@@ -13,6 +13,7 @@ import NotificationsSection from "@/components/live/notifications-section";
 import SettingsSection from "@/components/live/settings-section";
 import GlobalSearch from "@/components/live/global-search";
 import WeddingStudio from "@/components/live/wedding-studio";
+import GuideSection from "@/components/live/guide-section";
 
 export const dynamic="force-dynamic";
 const n=(v:any)=>Number(v||0);
@@ -63,5 +64,6 @@ export default async function Page(){
   notifications={<NotificationsSection items={notifications}/>}
   activity={<ActivitySection items={activity as any[]}/>}
   settings={<SettingsSection wedding={wedding} licenseHint={license?.code_hint} admin={Boolean(admin)} coverUrl={coverUrl}/>}
+  guide={<GuideSection/>}
  />
 }
