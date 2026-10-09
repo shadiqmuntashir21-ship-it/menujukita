@@ -20,8 +20,8 @@ import CalendarSection from "@/components/live/calendar-section";
 import ConceptSection from "@/components/live/concept-section";
 import GiftsSection from "@/components/live/gifts-section";
 import DecisionsSection from "@/components/live/decisions-section";
-import InvitationSection from "@/components/live/invitation-section";
 import ReportsSection from "@/components/live/reports-section";
+import EventsEditor from "@/components/live/events-editor";
 
 export const dynamic="force-dynamic";
 const n=(v:any)=>Number(v||0);
@@ -49,7 +49,6 @@ export default async function Page(){
  const partnerAccess=await db`SELECT status,display_name FROM wedding_partner_access WHERE wedding_id=${wedding.id} LIMIT 1`;
  const agenda=await db`SELECT id,title,kind,happens_on,starts_at,location,note FROM wedding_agenda_entries WHERE wedding_id=${wedding.id} ORDER BY happens_on,starts_at LIMIT 500`;
  const calendarEvents=assembleWeddingCalendar({tasks:tasks as any[],payments:paymentsRaw as any[],events:events as any[],rundown:rundown as any[],agenda:agenda as any[]});
- const [invitationSettings]=await db`SELECT * FROM wedding_invitation_pages WHERE wedding_id=${wedding.id} LIMIT 1`;
  const [conceptData,inspirations,gifts,decisions,decisionComments]=await Promise.all([
    db`SELECT * FROM wedding_concepts WHERE wedding_id=${wedding.id} LIMIT 1`,
    db`SELECT * FROM wedding_inspirations WHERE wedding_id=${wedding.id} ORDER BY created_at DESC LIMIT 60`,
@@ -71,7 +70,7 @@ export default async function Page(){
  (vendors as any[]).filter(v=>["negotiating","contacted"].includes(v.status)).slice(0,2).forEach(v=>priorities.push({title:`Finalisasi ${v.name}`,meta:`${v.category} masih ${v.status}`,kind:"Vendor",score:55}));priorities.sort((a,b)=>b.score-a.score);
  if(priorities.length===0)(tasks as any[]).filter(t=>t.status!=='done'&&t.status!=='skipped').slice(0,3).forEach((t,i)=>priorities.push({title:t.title,meta:'Buka panduan, lalu mulai sesuai waktu kalian.',kind:'Langkah',score:40-i}));
  const waitingGuests=(guests as any[]).filter(g=>["waiting","not_sent","maybe"].includes(g.rsvp_status)).length,notifications:any[]=priorities.slice(0,8).map(p=>({title:p.title,meta:p.meta,kind:p.kind,level:p.score>=100?"critical":p.score>=70?"important":"info"}));
- if(waitingGuests>0&&days!==null&&days<=60)notifications.push({title:`${waitingGuests} undangan belum final RSVP`,meta:"Follow-up guest list sebelum jumlah tamu dikunci.",kind:"Tamu",level:days<=21?"important":"info"});
+ if(waitingGuests>0&&days!==null&&days<=60)notifications.push({title:`${waitingGuests} tamu belum konfirmasi kehadiran`,meta:"Periksa konfirmasi kehadiran sebelum jumlah tamu dikunci.",kind:"Tamu",level:days<=21?"important":"info"});
  const searchItems=[...(tasks as any[]).map(t=>({type:"Task",title:String(t.title),meta:[t.category,t.status].join(" · "),target:"plan"})),...(vendors as any[]).map(v=>({type:"Vendor",title:String(v.name),meta:[v.category,v.status].join(" · "),target:"vendors"})),...(guests as any[]).map(g=>({type:"Tamu",title:String(g.name),meta:[g.rsvp_status,g.phone].filter(Boolean).join(" · "),target:"guests"})),...(rundown as any[]).map(r=>({type:"Rundown",title:String(r.activity),meta:[r.location,r.vendor_name].filter(Boolean).join(" · "),target:"plan"})),...(documents as any[]).map(d=>({type:"Dokumen",title:String(d.name),meta:String(d.category||""),target:"vault"})),...payments.map((p:any)=>({type:"Pembayaran",title:String(p.description),meta:[p.vendor_name,p.status].filter(Boolean).join(" · "),target:"money"}))];
  const metrics={days,health,healthLabel,progress,bookedVendors,confirmedPax,safeToSpend,planned,actual,paid,committed,overduePayments};
  return <WeddingStudio couple={wedding.couple_one_name+" & "+wedding.couple_two_name} days={days} admin={Boolean(admin)} search={<GlobalSearch items={searchItems}/>}
@@ -85,13 +84,12 @@ export default async function Page(){
   team={<MembersSection members={members as any[]} invites={[]} role={admin?"owner":license?.partner_id?"partner":"owner"} partnerStatus={partnerAccess[0]?.status} partnerName={partnerAccess[0]?.display_name}/>}
   notifications={<NotificationsSection items={notifications}/>}
   activity={<ActivitySection items={activity as any[]}/>}
-  settings={<SettingsSection wedding={wedding} licenseHint={license?.code_hint} admin={Boolean(admin)} coverUrl={coverUrl}/>}
+  settings={<SettingsSection wedding={wedding} licenseHint={license?.code_hint} admin={Boolean(admin)} coverUrl={coverUrl} eventsEditor={<EventsEditor events={events as any[]}/>}/>}
   guide={<GuideSection/>}
   calendar={<CalendarSection events={calendarEvents} currentMonth={new Date().toLocaleDateString("sv-SE",{timeZone:"Asia/Makassar"}).slice(0,7)}/>}
   concept={<ConceptSection concept={conceptData[0]||null} inspirations={inspirations as any[]}/>}
   gifts={<GiftsSection gifts={gifts as any[]}/>}
   decisions={<DecisionsSection decisions={decisions as any[]} comments={decisionComments as any[]}/>}
-  invitation={<InvitationSection invitation={invitationSettings||null} events={events as any[]} couple={wedding.couple_one_name+" & "+wedding.couple_two_name}/>}
   reports={<ReportsSection/>}
  />
 }
