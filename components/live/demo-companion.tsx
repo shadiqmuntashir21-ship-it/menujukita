@@ -11,7 +11,7 @@ const defaults:DemoExtras={theme:"Modern Garden",palette:"Ivory, sage, champagne
 const caption:Record<Kind,string>={concept:"Konsep & Mood Board",gifts:"Daftar Seserahan",decisions:"Diskusi Berdua"};
 export default function DemoCompanion({view}:{view:Kind}){
  const[state,setState]=useState<DemoExtras>(defaults),[ready,setReady]=useState(false);
- useEffect(()=>{try{const s=localStorage.getItem("menujukita_demo_extra_v2");if(s){const p=JSON.parse(s);setState({...defaults,...p,items:{...defaults.items,...p.items}})}}catch{}setReady(true)},[]);
+ useEffect(()=>{try{const s=localStorage.getItem("menujukita_demo_extra_v2");if(s){const p=JSON.parse(s);setState({theme:typeof p.theme==="string"?p.theme:defaults.theme,palette:typeof p.palette==="string"?p.palette:defaults.palette,items:{concept:Array.isArray(p.items?.concept)?p.items.concept:defaults.items.concept,gifts:Array.isArray(p.items?.gifts)?p.items.gifts:defaults.items.gifts,decisions:Array.isArray(p.items?.decisions)?p.items.decisions:defaults.items.decisions}})}}catch{}setReady(true)},[]);
  useEffect(()=>{if(ready)localStorage.setItem("menujukita_demo_extra_v2",JSON.stringify(state))},[ready,state]);
  const items=state.items[view]||[];
  const update=(key:keyof DemoExtras,v:any)=>setState(s=>({...s,[key]:v}));
