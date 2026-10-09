@@ -21,6 +21,7 @@ import ConceptSection from "@/components/live/concept-section";
 import GiftsSection from "@/components/live/gifts-section";
 import DecisionsSection from "@/components/live/decisions-section";
 import InvitationSection from "@/components/live/invitation-section";
+import ReportsSection from "@/components/live/reports-section";
 
 export const dynamic="force-dynamic";
 const n=(v:any)=>Number(v||0);
@@ -90,5 +91,6 @@ export default async function Page(){
   gifts={<GiftsSection gifts={gifts as any[]}/>}
   decisions={<DecisionsSection decisions={decisions as any[]} comments={decisionComments as any[]}/>}
   invitation={<InvitationSection invitation={invitationSettings||null} events={events as any[]} couple={wedding.couple_one_name+" & "+wedding.couple_two_name}/>}
+  reports={<ReportsSection/>}
  />
 }
