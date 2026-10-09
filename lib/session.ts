@@ -24,17 +24,18 @@ export async function getLicenseSession(){
   const raw=(await cookies()).get(LICENSE_COOKIE)?.value;
   if(!raw)return null;
   const db=sql();
-  const rows=await db`SELECT s.id session_id,s.license_id,s.expires_at,l.status,l.wedding_id,l.code_hint,l.pin_hint
-    FROM license_sessions s JOIN licenses l ON l.id=s.license_id
-    WHERE s.token_hash=${sha256(raw)} AND s.revoked_at IS NULL AND s.expires_at>now() LIMIT 1`;
+  const rows=await db`SELECT s.id session_id,s.license_id,s.partner_id,s.actor_kind,s.expires_at,l.status,l.wedding_id,l.code_hint,l.pin_hint,p.display_name partner_name
+    FROM license_sessions s JOIN licenses l ON l.id=s.license_id LEFT JOIN wedding_partner_access p ON p.id=s.partner_id AND p.wedding_id=l.wedding_id
+    WHERE s.token_hash=${sha256(raw)} AND s.revoked_at IS NULL AND s.expires_at>now()
+      AND ((s.actor_kind='owner' AND s.partner_id IS NULL) OR (s.actor_kind='partner' AND s.partner_id IS NOT NULL AND p.status='active')) LIMIT 1`;
   if(!rows[0])return null;
   await db`UPDATE license_sessions SET last_seen_at=now() WHERE id=${rows[0].session_id}`;
   return rows[0] as any;
 }
-export async function createLicenseSession(licenseId:string){
+export async function createLicenseSession(licenseId:string,partnerId:string|null=null){
   const db=sql(),raw=token(),meta=await requestMeta();
-  await db`INSERT INTO license_sessions(license_id,token_hash,user_agent,ip_hash,expires_at)
-    VALUES(${licenseId},${sha256(raw)},${meta.userAgent},${meta.ipHash},now()+interval '30 days')`;
+  await db`INSERT INTO license_sessions(license_id,partner_id,actor_kind,token_hash,user_agent,ip_hash,expires_at)
+    VALUES(${licenseId},${partnerId},${partnerId?'partner':'owner'},${sha256(raw)},${meta.userAgent},${meta.ipHash},now()+interval '30 days')`;
   (await cookies()).set(LICENSE_COOKIE,raw,cookieOptions(60*60*24*30));
 }
 export async function revokeLicenseSession(){

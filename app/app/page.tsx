@@ -13,6 +13,15 @@ import NotificationsSection from "@/components/live/notifications-section";
 import SettingsSection from "@/components/live/settings-section";
 import GlobalSearch from "@/components/live/global-search";
 import WeddingStudio from "@/components/live/wedding-studio";
+import GuideSection from "@/components/live/guide-section";
+import {loadWeddingFinance} from "@/lib/finance";
+import {assembleWeddingCalendar} from "@/lib/calendar";
+import CalendarSection from "@/components/live/calendar-section";
+import ConceptSection from "@/components/live/concept-section";
+import GiftsSection from "@/components/live/gifts-section";
+import DecisionsSection from "@/components/live/decisions-section";
+import ReportsSection from "@/components/live/reports-section";
+import EventsEditor from "@/components/live/events-editor";
 
 export const dynamic="force-dynamic";
 const n=(v:any)=>Number(v||0);
@@ -31,37 +40,56 @@ export default async function Page(){
   db`SELECT r.*,m.display_name pic_name,v.name vendor_name FROM rundown_items r LEFT JOIN wedding_members m ON m.id=r.pic_member_id LEFT JOIN vendors v ON v.id=r.vendor_id WHERE r.wedding_id=${wedding.id} ORDER BY r.starts_at,r.sort_order`,
   db`SELECT * FROM documents WHERE wedding_id=${wedding.id} ORDER BY created_at DESC`,
   db`SELECT id,display_name,invited_email,role,can_view_budget,status,joined_at FROM wedding_members WHERE wedding_id=${wedding.id} AND status<>'revoked' ORDER BY created_at`,
-  db`SELECT id,name,event_type,event_date,start_time FROM wedding_events WHERE wedding_id=${wedding.id} ORDER BY sort_order,event_date,start_time`,
+  db`SELECT id,name,event_type,event_date,start_time,end_time,location,map_url,is_public FROM wedding_events WHERE wedding_id=${wedding.id} ORDER BY sort_order,event_date,start_time`,
   db`SELECT st.*,we.name event_name FROM seating_tables st LEFT JOIN wedding_events we ON we.id=st.event_id WHERE st.wedding_id=${wedding.id} ORDER BY st.sort_order,st.created_at`,
   db`SELECT sa.*,g.name guest_name FROM seating_assignments sa JOIN guests g ON g.id=sa.guest_id WHERE sa.wedding_id=${wedding.id} ORDER BY sa.id`,
   db`SELECT a.*,COALESCE(m.display_name,m.invited_email,CASE WHEN a.auth_user_id='admin' THEN 'MenujuKita Admin' ELSE 'Wedding access' END) actor_name FROM activity_logs a LEFT JOIN wedding_members m ON m.wedding_id=a.wedding_id AND m.auth_user_id=a.auth_user_id WHERE a.wedding_id=${wedding.id} ORDER BY a.created_at DESC LIMIT 40`
  ]);
+ const {entries:cashEntries,summary:finance}=await loadWeddingFinance(db,String(wedding.id),n(wedding.budget_total),n(wedding.reserve_buffer));
+ const partnerAccess=await db`SELECT status,display_name FROM wedding_partner_access WHERE wedding_id=${wedding.id} LIMIT 1`;
+ const agenda=await db`SELECT id,title,kind,happens_on,starts_at,location,note FROM wedding_agenda_entries WHERE wedding_id=${wedding.id} ORDER BY happens_on,starts_at LIMIT 500`;
+ const calendarEvents=assembleWeddingCalendar({tasks:tasks as any[],payments:paymentsRaw as any[],events:events as any[],rundown:rundown as any[],agenda:agenda as any[]});
+ const [conceptData,inspirations,gifts,decisions,decisionComments]=await Promise.all([
+   db`SELECT * FROM wedding_concepts WHERE wedding_id=${wedding.id} LIMIT 1`,
+   db`SELECT * FROM wedding_inspirations WHERE wedding_id=${wedding.id} ORDER BY created_at DESC LIMIT 60`,
+   db`SELECT * FROM wedding_gifts WHERE wedding_id=${wedding.id} ORDER BY purchased ASC,created_at DESC LIMIT 150`,
+   db`SELECT * FROM wedding_decisions WHERE wedding_id=${wedding.id} ORDER BY updated_at DESC LIMIT 100`,
+   db`SELECT c.* FROM wedding_decision_comments c JOIN wedding_decisions d ON d.id=c.decision_id AND d.wedding_id=c.wedding_id WHERE c.wedding_id=${wedding.id} ORDER BY c.created_at ASC LIMIT 500`
+ ]);
  const payments=(paymentsRaw as any[]).map(p=>({...p,status:p.display_status||p.status})),total=tasks.length,done=tasks.filter((t:any)=>t.status==="done").length,progress=total?Math.round(done/total*100):0;
- const days=wedding.wedding_date?Math.max(0,diffDays(wedding.wedding_date)):0,planned=(budgetItems as any[]).reduce((s,b)=>s+n(b.planned_amount),0),actual=(budgetItems as any[]).reduce((s,b)=>s+n(b.actual_amount||b.planned_amount),0);
- const budgetPaid=(budgetItems as any[]).reduce((s,b)=>s+n(b.paid_amount),0),paymentPaid=payments.filter((p:any)=>p.status==="paid").reduce((s:any,p:any)=>s+n(p.amount),0),paid=payments.length?paymentPaid:budgetPaid;
- const committed=payments.filter((p:any)=>p.status!=="paid"&&p.status!=="cancelled").reduce((s:any,p:any)=>s+n(p.amount),0),moneyBase=n(wedding.available_funds)>0?n(wedding.available_funds):n(wedding.budget_total),safeToSpend=Math.max(0,moneyBase-paid-committed-n(wedding.reserve_buffer));
+ const days=wedding.wedding_date?Math.max(0,diffDays(wedding.wedding_date)):null,planned=(budgetItems as any[]).reduce((s,b)=>s+n(b.planned_amount),0),actual=(budgetItems as any[]).reduce((s,b)=>s+n(b.actual_amount||b.planned_amount),0);
+ const paid=finance.vendorPayments;
+ const committed=finance.commitments,safeToSpend=finance.safeToSpend;
  const bookedVendors=vendors.filter((v:any)=>["booked","completed"].includes(v.status)).length,confirmedPax=guests.filter((g:any)=>g.rsvp_status==="attending").reduce((s:any,g:any)=>s+n(g.actual_pax||g.expected_pax||1),0),overduePayments=payments.filter((p:any)=>p.status==="overdue").length,usedDocumentBytes=(documents as any[]).reduce((s,d)=>s+n(d.size_bytes),0);
- const taskScore=total?done/total*100:70,budgetTotal=n(wedding.budget_total),projection=actual||planned,budgetScore=!budgetTotal?80:projection<=budgetTotal?100:Math.max(20,100-((projection-budgetTotal)/budgetTotal*100)),vendorScore=vendors.length?bookedVendors/vendors.length*100:(days>120?80:60),paymentScore=Math.max(20,100-overduePayments*25),guestRaw=n(wedding.guest_target)?Math.min(100,confirmedPax/n(wedding.guest_target)*100):80,guestScore=days>60?Math.max(70,guestRaw):Math.max(40,guestRaw);
- const health=Math.round(taskScore*.35+budgetScore*.25+vendorScore*.20+paymentScore*.10+guestScore*.10),healthLabel=health>=90?"Sangat Baik":health>=75?"Terkendali":health>=60?"Perlu Perhatian":"Berisiko";
+ const taskScore=total?done/total*100:70,budgetTotal=n(wedding.budget_total),projection=actual||planned,budgetScore=!budgetTotal?80:projection<=budgetTotal?100:Math.max(20,100-((projection-budgetTotal)/budgetTotal*100)),vendorScore=vendors.length?bookedVendors/vendors.length*100:((days===null||days>120)?80:60),paymentScore=Math.max(20,100-overduePayments*25),guestRaw=n(wedding.guest_target)?Math.min(100,confirmedPax/n(wedding.guest_target)*100):80,guestScore=(days===null||days>60)?Math.max(70,guestRaw):Math.max(40,guestRaw);
+ const insufficient=!budgetTotal&&vendors.length===0&&confirmedPax===0;
+ const health=insufficient?null:Math.round(taskScore*.35+budgetScore*.25+vendorScore*.20+paymentScore*.10+guestScore*.10),healthLabel=health===null?"Belum cukup data":health>=90?"Sangat Baik":health>=75?"Terkendali":health>=60?"Perlu Perhatian":"Berisiko";
  const priorities:{title:string;meta:string;kind:string;score:number}[]=[];
  (tasks as any[]).filter(t=>t.status!=="done"&&t.due_date).forEach(t=>{const d=diffDays(t.due_date);if(d<0)priorities.push({title:t.title,meta:`Terlambat ${Math.abs(d)} hari`,kind:"Task",score:100+Math.abs(d)});else if(d<=14)priorities.push({title:t.title,meta:d===0?"Deadline hari ini":`Deadline ${d} hari lagi`,kind:"Task",score:80-d})});
  payments.filter((p:any)=>p.status!=="paid"&&p.status!=="cancelled"&&p.due_date).forEach((p:any)=>{const d=diffDays(p.due_date);if(d<0)priorities.push({title:`Bayar ${p.description}`,meta:`Terlambat ${Math.abs(d)} hari`,kind:"Pembayaran",score:120});else if(d<=14)priorities.push({title:`Bayar ${p.description}`,meta:d===0?"Jatuh tempo hari ini":`Jatuh tempo ${d} hari lagi`,kind:"Payment",score:90-d})});
  (vendors as any[]).filter(v=>["negotiating","contacted"].includes(v.status)).slice(0,2).forEach(v=>priorities.push({title:`Finalisasi ${v.name}`,meta:`${v.category} masih ${v.status}`,kind:"Vendor",score:55}));priorities.sort((a,b)=>b.score-a.score);
+ if(priorities.length===0)(tasks as any[]).filter(t=>t.status!=='done'&&t.status!=='skipped').slice(0,3).forEach((t,i)=>priorities.push({title:t.title,meta:'Buka panduan, lalu mulai sesuai waktu kalian.',kind:'Langkah',score:40-i}));
  const waitingGuests=(guests as any[]).filter(g=>["waiting","not_sent","maybe"].includes(g.rsvp_status)).length,notifications:any[]=priorities.slice(0,8).map(p=>({title:p.title,meta:p.meta,kind:p.kind,level:p.score>=100?"critical":p.score>=70?"important":"info"}));
- if(waitingGuests>0&&days<=60)notifications.push({title:`${waitingGuests} undangan belum final RSVP`,meta:"Follow-up guest list sebelum jumlah tamu dikunci.",kind:"Tamu",level:days<=21?"important":"info"});
+ if(waitingGuests>0&&days!==null&&days<=60)notifications.push({title:`${waitingGuests} tamu belum konfirmasi kehadiran`,meta:"Periksa konfirmasi kehadiran sebelum jumlah tamu dikunci.",kind:"Tamu",level:days<=21?"important":"info"});
  const searchItems=[...(tasks as any[]).map(t=>({type:"Task",title:String(t.title),meta:[t.category,t.status].join(" · "),target:"plan"})),...(vendors as any[]).map(v=>({type:"Vendor",title:String(v.name),meta:[v.category,v.status].join(" · "),target:"vendors"})),...(guests as any[]).map(g=>({type:"Tamu",title:String(g.name),meta:[g.rsvp_status,g.phone].filter(Boolean).join(" · "),target:"guests"})),...(rundown as any[]).map(r=>({type:"Rundown",title:String(r.activity),meta:[r.location,r.vendor_name].filter(Boolean).join(" · "),target:"plan"})),...(documents as any[]).map(d=>({type:"Dokumen",title:String(d.name),meta:String(d.category||""),target:"vault"})),...payments.map((p:any)=>({type:"Pembayaran",title:String(p.description),meta:[p.vendor_name,p.status].filter(Boolean).join(" · "),target:"money"}))];
  const metrics={days,health,healthLabel,progress,bookedVendors,confirmedPax,safeToSpend,planned,actual,paid,committed,overduePayments};
  return <WeddingStudio couple={wedding.couple_one_name+" & "+wedding.couple_two_name} days={days} admin={Boolean(admin)} search={<GlobalSearch items={searchItems}/>}
   home={<HomeSection wedding={wedding} metrics={metrics} priorities={priorities} payments={payments} coverUrl={coverUrl}/>}
   plan={<PlanSection tasks={tasks as any[]} rundown={rundown as any[]} members={members as any[]} vendors={vendors as any[]} canEdit weddingDate={wedding.wedding_date}/>}
-  money={<MoneySection wedding={wedding} metrics={metrics} budgetItems={budgetItems as any[]} payments={payments} vendors={vendors as any[]} canEdit/>}
+  money={<MoneySection wedding={wedding} metrics={metrics} budgetItems={budgetItems as any[]} payments={payments} vendors={vendors as any[]} cashEntries={cashEntries} financeSummary={finance} canEdit/>}
   guests={<GuestsSection guests={guests as any[]} wedding={wedding} canEdit/>}
   vendors={<VendorsSection vendors={vendors as any[]} canEdit/>}
   seating={<SeatingSection tables={seatingTables as any[]} assignments={seatingAssignments as any[]} guests={guests as any[]} events={events as any[]} canEdit/>}
   vault={<DocumentsSection documents={documents as any[]} usedBytes={usedDocumentBytes} canEdit canBudget weddingId={String(wedding.id)}/>}
-  team={<MembersSection members={members as any[]} invites={[]} role="owner"/>}
+  team={<MembersSection members={members as any[]} invites={[]} role={admin?"owner":license?.partner_id?"partner":"owner"} partnerStatus={partnerAccess[0]?.status} partnerName={partnerAccess[0]?.display_name}/>}
   notifications={<NotificationsSection items={notifications}/>}
   activity={<ActivitySection items={activity as any[]}/>}
-  settings={<SettingsSection wedding={wedding} licenseHint={license?.code_hint} admin={Boolean(admin)} coverUrl={coverUrl}/>}
+  settings={<SettingsSection wedding={wedding} licenseHint={license?.code_hint} admin={Boolean(admin)} coverUrl={coverUrl} eventsEditor={<EventsEditor events={events as any[]}/>}/>}
+  guide={<GuideSection/>}
+  calendar={<CalendarSection events={calendarEvents} currentMonth={new Date().toLocaleDateString("sv-SE",{timeZone:"Asia/Makassar"}).slice(0,7)}/>}
+  concept={<ConceptSection concept={conceptData[0]||null} inspirations={inspirations as any[]}/>}
+  gifts={<GiftsSection gifts={gifts as any[]}/>}
+  decisions={<DecisionsSection decisions={decisions as any[]} comments={decisionComments as any[]}/>}
+  reports={<ReportsSection/>}
  />
 }

@@ -1,11 +1,11 @@
-import { redirect } from "next/navigation";
-import { getLicenseSession } from "@/lib/session";
-import { activateWedding } from "./actions";
-import {BrandLogo} from "@/components/brand";
-import CurrencyInput from "@/components/currency-input";
+import {redirect} from "next/navigation";
+import {getLicenseSession} from "@/lib/session";
+import WeddingOnboarding from "./wizard";
 export const dynamic="force-dynamic";
 export default async function Page({searchParams}:{searchParams:Promise<{error?:string}>}){
- const license:any=await getLicenseSession();if(!license)redirect("/auth/sign-in");if(license.wedding_id)redirect("/app");const q=await searchParams;
- const errors:Record<string,string>={activation:"Aktivasi gagal. Coba ulang atau hubungi Teman Digital.",data:"Lengkapi nama pasangan dan tanggal wedding."};
- return <main className="auth-page onboarding-page"><form action={activateWedding} className="auth-card stack onboarding-card"><div className="brand"><BrandLogo className="auth-logo"/></div><div><span className="eyebrow">SETUP PERTAMA</span><h1 className="serif onboarding-title">Mari buat ruang wedding kalian.</h1><p className="muted">Cukup isi fondasinya. MenujuKita akan menyiapkan journey, checklist, kategori budget, dan event awal otomatis.</p></div>{q.error&&<div className="notice">{errors[q.error]||"Terjadi kendala saat aktivasi."}</div>}<div className="split"><label className="field"><span>Nama Pasangan 1</span><input className="input" name="one" required/></label><label className="field"><span>Nama Pasangan 2</span><input className="input" name="two" required/></label></div><div className="split"><label className="field"><span>Tanggal Wedding</span><input className="input" type="date" name="date" required/></label><label className="field"><span>Kota</span><input className="input" name="city" placeholder="Contoh: Palu"/></label></div><div className="split"><label className="field"><span>Budget Awal</span><CurrencyInput name="budget" placeholder="75.000.000"/></label><label className="field"><span>Target Tamu</span><input className="input" type="number" min="0" max="5000" name="guests" placeholder="350"/></label></div><label className="field"><span>Cara Merencanakan</span><select className="input" name="planning_style" defaultValue="couple"><option value="couple">Kami sendiri</option><option value="family">Kami + keluarga</option><option value="couple_wo">Kami + WO</option><option value="wo">WO dominan</option></select></label><div className="split"><label className="field"><span>Acara Utama</span><input className="input" name="ceremony_name" defaultValue="Akad / Pemberkatan"/></label><label className="field"><span>Acara Kedua</span><input className="input" name="reception_name" defaultValue="Resepsi"/></label></div><button className="btn btn-primary btn-large">Siapkan Wedding Studio</button></form></main>
+ const license:any=await getLicenseSession();
+ if(!license)redirect("/auth/sign-in");
+ if(license.wedding_id)redirect("/app");
+ const q=await searchParams;
+ return <WeddingOnboarding error={q.error}/>;
 }

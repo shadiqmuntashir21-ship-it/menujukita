@@ -1,15 +1,15 @@
 "use client";
 import {ReactNode,useEffect,useState} from "react";
 import Link from "next/link";
-import {Activity,Armchair,Bell,CalendarClock,CircleDollarSign,FileText,Home,ListChecks,Menu,Settings,Store,UsersRound,X} from "lucide-react";
+import {Activity,Armchair,Bell,CalendarClock,CircleDollarSign,FileText,FileDown,Gift,HeartHandshake,Palette,Home,BookOpen,ListChecks,Menu,Settings,Store,UsersRound,X} from "lucide-react";
 import {BrandIcon} from "@/components/brand";
-type View="home"|"plan"|"money"|"guests"|"vendors"|"seating"|"vault"|"team"|"notifications"|"activity"|"settings";
+type View="reports"|"concept"|"gifts"|"decisions"|"calendar"|"guide"|"home"|"plan"|"money"|"guests"|"vendors"|"seating"|"vault"|"team"|"notifications"|"activity"|"settings";
 const primary:[View,any,string][]=[["home",Home,"Beranda"],["plan",ListChecks,"Rencana"],["money",CircleDollarSign,"Dana"],["guests",UsersRound,"Tamu"]];
-const more:[View,any,string][]=[["vendors",Store,"Vendor"],["seating",Armchair,"Meja"],["vault",FileText,"Vault"],["team",UsersRound,"Tim"],["notifications",Bell,"Perhatian"],["activity",Activity,"Aktivitas"],["settings",Settings,"Pengaturan"]];
-export default function WeddingStudio({couple,days,admin,search,home,plan,money,guests,vendors,seating,vault,team,notifications,activity,settings}:{couple:string;days:number;admin:boolean;search:ReactNode;home:ReactNode;plan:ReactNode;money:ReactNode;guests:ReactNode;vendors:ReactNode;seating:ReactNode;vault:ReactNode;team:ReactNode;notifications:ReactNode;activity:ReactNode;settings:ReactNode}){
+const more:[View,any,string][]=[["vendors",Store,"Vendor"],["concept",Palette,"Konsep"],["gifts",Gift,"Seserahan"],["decisions",HeartHandshake,"Diskusi Berdua"],["calendar",CalendarClock,"Kalender"],["seating",Armchair,"Meja"],["vault",FileText,"Vault"],["reports",FileDown,"Laporan"],["team",UsersRound,"Tim"],["notifications",Bell,"Perhatian"],["activity",Activity,"Aktivitas"],["settings",Settings,"Pengaturan"],["guide",BookOpen,"Panduan"]];
+export default function WeddingStudio({couple,days,admin,search,home,plan,money,guests,vendors,seating,vault,team,notifications,activity,settings,guide,calendar,concept,gifts,decisions,reports}:{couple:string;days:number|null;admin:boolean;search:ReactNode;home:ReactNode;plan:ReactNode;money:ReactNode;guests:ReactNode;vendors:ReactNode;seating:ReactNode;vault:ReactNode;team:ReactNode;notifications:ReactNode;activity:ReactNode;settings:ReactNode;guide:ReactNode;calendar:ReactNode;concept:ReactNode;gifts:ReactNode;decisions:ReactNode;reports:ReactNode}){
  const[view,setView]=useState<View>("home"),[open,setOpen]=useState(false);
  useEffect(()=>{const handler=(e:Event)=>{const v=(e as CustomEvent).detail as View;if(v)setView(v);setOpen(false)};window.addEventListener("menujukita:navigate",handler);return()=>window.removeEventListener("menujukita:navigate",handler)},[]);
- const render=()=>({home,plan,money,guests,vendors,seating,vault,team,notifications,activity,settings}[view]);
+ const render=()=>({home,plan,money,guests,vendors,seating,vault,team,notifications,activity,settings,guide,calendar,concept,gifts,decisions,reports}[view]);
  const go=(v:View)=>{setView(v);setOpen(false);window.scrollTo({top:0,behavior:"smooth"})};
  return <div className="studio-shell">
    <aside className="studio-rail">
@@ -21,7 +21,7 @@ export default function WeddingStudio({couple,days,admin,search,home,plan,money,
    </aside>
    <div className="studio-frame">
      <header className="studio-topbar">
-       <div className="studio-title"><small>{admin?"MODE BANTUAN ADMIN · WEDDING STUDIO":"WEDDING STUDIO"}</small><strong>{couple}</strong><span>{days===0?"Hari ini adalah hari kalian":days+" hari menuju hari kalian"}</span></div>
+       <div className="studio-title"><small>{admin?"MODE BANTUAN ADMIN · WEDDING STUDIO":"WEDDING STUDIO"}</small><strong>{couple}</strong><span>{days===null?"Tanggal belum ditentukan":days===0?"Hari ini adalah hari kalian":days+" hari menuju hari kalian"}</span></div>
        <div className="studio-top-actions">{search}<Link className="dayh-pill" href="/app/day-h"><CalendarClock size={17}/><span>Day-H</span></Link></div>
      </header>
      {admin&&<div className="support-banner"><strong>Mode Bantuan</strong><span>Anda membuka workspace customer sebagai Super Admin. Perubahan tercatat di log aktivitas.</span></div>}
