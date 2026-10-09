@@ -23,16 +23,15 @@ async function main() {
   if(await page.getByText("QA CHECKLIST TERSIMPAN").count())throw Error("Reset Demo failed");
   await page.locator(".studio-rail button").filter({hasText:"Dana"}).first().click();
   await page.getByText("Uang benar-benar terkumpul").first().waitFor();
-  await page.locator(".studio-rail button").filter({hasText:"Lainnya"}).click();
   for(const [label,heading] of [
    ["Konsep","Konsep & Mood Board"],
    ["Seserahan","Daftar Seserahan"],
    ["Diskusi Berdua","Diskusi Berdua"],
    ["Panduan","Belajar sambil menyiapkan wedding."]
   ]){
-   await page.locator(".studio-rail button").filter({hasText:"Lainnya"}).click().catch(()=>{});
-   if(!(await page.locator(".more-grid").isVisible()))await page.locator(".studio-rail button").filter({hasText:"Lainnya"}).click();
-   await page.locator(".more-grid button").filter({hasText:label}).first().click();
+   await page.locator(".studio-rail button.rail-more").click();
+   await page.locator(".studio-more-sheet").waitFor({state:"visible"});
+   await page.locator(".studio-more-sheet .more-grid button").filter({hasText:label}).first().click();
    await page.getByRole("heading",{name:heading}).first().waitFor({timeout:15000});
   }
   await page.setViewportSize({width:390,height:844});
