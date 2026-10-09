@@ -1,18 +1,19 @@
 "use client";
 import { FormEvent,useEffect,useMemo,useState } from "react";
 import Link from "next/link";
-import { Armchair,Bell,CalendarClock,CircleDollarSign,BookOpen,FileText,HeartPulse,Home,ListChecks,Menu,RotateCcw,Settings,Store,UsersRound,X } from "lucide-react";
+import { Armchair,Bell,CalendarClock,CircleDollarSign,BookOpen,FileText,HeartPulse,Gift,Palette,HeartHandshake,Mail,Home,ListChecks,Menu,RotateCcw,Settings,Store,UsersRound,X } from "lucide-react";
 import { demoSeed,type DemoState,type DemoRundown } from "@/lib/demo-data";
 import {BrandIcon} from "@/components/brand";
 import CurrencyInput from "@/components/currency-input";
 import GuideSection,{GuideInline} from "@/components/live/guide-section";
 import DemoSavings from "@/components/live/demo-savings";
+import DemoCompanion from "@/components/live/demo-companion";
 
 type View="guide"|"home"|"plan"|"money"|"guests"|"vendors"|"seating"|"timeline"|"health"|"alerts"|"vault"|"team"|"settings"|"dayh";
 const nav:[View,any,string][]=[
  ["home",Home,"Beranda"],["plan",ListChecks,"Rencana"],["money",CircleDollarSign,"Dana"],["guests",UsersRound,"Tamu"],
  ["vendors",Store,"Vendor"],["seating",Armchair,"Meja"],["timeline",CalendarClock,"Timeline"],["health",HeartPulse,"Health"],["alerts",Bell,"Perhatian"],["vault",FileText,"Vault"],
- ["team",UsersRound,"Tim"],["guide",BookOpen,"Panduan"],["settings",Settings,"Pengaturan"],["dayh",CalendarClock,"Day-H"]
+ ["team",UsersRound,"Tim"],["concept",Palette,"Konsep"],["gifts",Gift,"Seserahan"],["decisions",HeartHandshake,"Diskusi Berdua"],["invitation",Mail,"Undangan"],["guide",BookOpen,"Panduan"],["settings",Settings,"Pengaturan"],["dayh",CalendarClock,"Day-H"]
 ];
 const money=(n:number)=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(n);
 const priorityText:Record<string,string>={low:"Rendah",medium:"Sedang",high:"Tinggi",critical:"Kritis"};
@@ -34,7 +35,7 @@ export default function Demo(){
  const attending=data.guests.filter(g=>g.rsvp==="Attending").reduce((x,g)=>x+g.pax,0),waiting=data.guests.filter(g=>["Waiting","Maybe"].includes(g.rsvp)).length,declined=data.guests.filter(g=>g.rsvp==="Declined").length;
  const overdue=data.payments.filter(p=>p.status==="Overdue").length;
  const health=Math.max(35,Math.min(98,Math.round(progress*.35+(booked/Math.max(1,data.vendors.length))*25+Math.min(100,attending/Math.max(1,data.targetGuests)*100)*.18+(safe>0?18:6)-overdue*3)));
- const reset=()=>{localStorage.removeItem("menujukita_demo_v4");setData(demoSeed);setView("home")};
+ const reset=()=>{localStorage.removeItem("menujukita_demo_extra_v2");localStorage.removeItem("menujukita_demo_v4");setData(demoSeed);setView("home")};
  const go=(v:View)=>{setView(v);setMore(false);window.scrollTo({top:0,behavior:"smooth"})};
  return <div className="demo-studio demo-full">
   <aside className="studio-rail demo-rail"><Link className="studio-logo" href="/" aria-label="MenujuKita"><BrandIcon/></Link>{nav.slice(0,7).map(([id,I,label])=><button key={id} className={view===id?"active":""} onClick={()=>go(id)}><I size={20}/><span>{label}</span></button>)}<div className="rail-spacer"/><button onClick={()=>go("dayh")} className={view==="dayh"?"active":""}><CalendarClock size={20}/><span>Day-H</span></button><button className="rail-more" onClick={()=>setMore(v=>!v)}><Menu size={20}/><span>Lainnya</span></button></aside>
@@ -54,6 +55,7 @@ export default function Demo(){
    {view==="settings"&&<DemoSettings data={data} setData={setData}/>}
    {view==="dayh"&&<DemoDayH data={data} setData={setData}/>}
    {view==="guide"&&<GuideSection/>}
+   {(["concept","gifts","decisions","invitation"] as const).includes(view as any)&&<DemoCompanion key={view} view={view as "concept"|"gifts"|"decisions"|"invitation"} couple={data.couple} date={data.date}/>}
   </main></div>
   <nav className="studio-mobile-nav">{nav.slice(0,4).map(([id,I,label])=><button key={id} className={view===id?"active":""} onClick={()=>go(id)}><I size={20}/><small>{label}</small></button>)}<button className={more?"active":""} onClick={()=>setMore(v=>!v)}><Menu size={20}/><small>Lainnya</small></button></nav>
   {more&&<><button className="studio-sheet-backdrop" onClick={()=>setMore(false)}/><aside className="studio-more-sheet"><div className="sheet-head"><div><small>DEMO PRO</small><h3>Semua ruang wedding</h3></div><button className="icon-button" onClick={()=>setMore(false)}><X size={18}/></button></div><div className="more-grid">{nav.slice(4).map(([id,I,label])=><button key={id} onClick={()=>go(id)} className={view===id?"active":""}><I size={19}/><span>{label}</span></button>)}</div></aside></>}
