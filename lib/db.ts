@@ -4,7 +4,15 @@ type QuerySpec={text:string;params:any[]};
 type TransactionOptions={isolationLevel?:string};
 const DEFAULT_BRIDGE="https://br-bitter-waterfall-b5jea6qo-dbbridge.compute.c-7.us-east-2.aws.neon.tech/";
 
-function bridgeUrl(){return process.env.DB_BRIDGE_URL||DEFAULT_BRIDGE}
+function bridgeUrl(){
+  const explicitBridge=process.env.DB_BRIDGE_URL?.trim();
+  if(explicitBridge)return explicitBridge;
+  // Preview deployments must never silently fall back to the production bridge.
+  if(process.env.VERCEL==="1" && process.env.VERCEL_ENV!=="production"){
+    throw new Error("DB_BRIDGE_URL wajib menggunakan bridge development untuk Preview/Development");
+  }
+  return DEFAULT_BRIDGE;
+}
 function vercelOidcToken(){
   const context=(globalThis as any)[Symbol.for("@vercel/request-context")]?.get?.();
   return context?.headers?.["x-vercel-oidc-token"]??process.env.VERCEL_OIDC_TOKEN;
